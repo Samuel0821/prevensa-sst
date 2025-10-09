@@ -1,9 +1,10 @@
+// backend/src/controllers/document.controller.js
 const db = require("../config/db");
 const fileService = require("../services/file.service");
 
 exports.getAllDocuments = (req, res) => {
   try {
-    const docs = db.prepare("SELECT * FROM documents").all();
+    const docs = db.prepare("SELECT * FROM documents ORDER BY uploaded_at DESC").all();
     res.json(docs);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -31,12 +32,7 @@ exports.uploadDocument = (req, res) => {
 
     res.status(201).json({
       message: "Documento subido correctamente",
-      document: {
-        id: info.lastInsertRowid,
-        company_id,
-        title,
-        filename,
-      },
+      document: { id: info.lastInsertRowid, company_id, title, filename },
     });
   } catch (error) {
     console.error("❌ Error al subir documento:", error);
@@ -52,7 +48,6 @@ exports.deleteDocument = (req, res) => {
 
     fileService.deleteFile(doc.filename);
     db.prepare("DELETE FROM documents WHERE id = ?").run(id);
-
     res.json({ message: "Documento eliminado correctamente" });
   } catch (error) {
     res.status(500).json({ error: error.message });

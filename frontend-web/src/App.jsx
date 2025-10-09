@@ -1,3 +1,4 @@
+// frontend-web/src/App.jsx
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
@@ -13,11 +14,7 @@ import Login from "./pages/Login";
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("token");
   const location = useLocation();
-
-  if (!token) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
+  if (!token) return <Navigate to="/login" state={{ from: location }} replace />;
   return children;
 }
 
@@ -32,61 +29,15 @@ export default function App() {
         {!isLoginPage && <Navbar />}
         <main className="flex-1 p-6 overflow-y-auto">
           <Routes>
-            {/* Página pública */}
             <Route path="/login" element={<Login />} />
-
-            {/* Rutas protegidas */}
-            <Route
-              path="/"
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/companies"
-              element={
-                <PrivateRoute>
-                  <Companies />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/documents"
-              element={
-                <PrivateRoute>
-                  <Documents />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/incidents"
-              element={
-                <PrivateRoute>
-                  <Incidents />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/trainings"
-              element={
-                <PrivateRoute>
-                  <Trainings />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/users"
-              element={
-                <PrivateRoute>
-                  <Users />
-                </PrivateRoute>
-              }
-            />
-
-            {/* Redirección general */}
-            <Route path="*" element={<Navigate to="/" />} />
+            <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            <Route path="/companies" element={<PrivateRoute><Companies /></PrivateRoute>} />
+            <Route path="/documents" element={<PrivateRoute><Documents /></PrivateRoute>} />
+            <Route path="/incidents" element={<PrivateRoute><Incidents /></PrivateRoute>} />
+            <Route path="/trainings" element={<PrivateRoute><Trainings /></PrivateRoute>} />
+            <Route path="/users" element={<PrivateRoute><Users /></PrivateRoute>} />
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+            <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>
         </main>
       </div>

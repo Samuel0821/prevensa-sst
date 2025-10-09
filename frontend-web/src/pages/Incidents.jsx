@@ -1,108 +1,133 @@
-import { useState, useEffect } from "react";
+// frontend-web/src/pages/Incidents.jsx
+import { useEffect, useState } from "react";
 import api from "../api/axiosConfig";
 
 export default function Incidents() {
   const [incidents, setIncidents] = useState([]);
-  const [form, setForm] = useState({
-    description: "",
-    date: "",
-  });
+  const [description, setDescription] = useState("");
+  const [date, setDate] = useState("");
+  const [location, setLocation] = useState("");
   const [photo, setPhoto] = useState(null);
 
-  const fetchIncidents = async () => {
+  // 🔹 Cargar incidentes
+  const loadIncidents = async () => {
     try {
       const res = await api.get("/incidents");
       setIncidents(res.data);
     } catch (err) {
-      console.error("Error al obtener incidentes:", err);
+      console.error("Error al cargar incidentes:", err);
     }
   };
 
   useEffect(() => {
-    fetchIncidents();
+    loadIncidents();
   }, []);
 
+  // 🔹 Registrar nuevo incidente
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const data = new FormData();
-    data.append("description", form.description);
-    data.append("date", form.date);
-    if (photo) data.append("photo", photo);
-
     try {
-      await api.post("/incidents", data, {
+      const formData = new FormData();
+      formData.append("description", description);
+      formData.append("date", date);
+      formData.append("location", location);
+      if (photo) formData.append("photo", photo);
+
+      await api.post("/incidents", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      alert("✅ Incidente registrado correctamente");
-      setForm({ description: "", date: "" });
+
+      alert("Incidente registrado correctamente");
+      setDescription("");
+      setDate("");
+      setLocation("");
       setPhoto(null);
-      fetchIncidents();
+      loadIncidents();
     } catch (err) {
       console.error("Error al registrar incidente:", err);
+      alert("Error al registrar incidente");
+    }
+  };
+
+  // 🔹 Eliminar incidente
+  const handleDelete = async (id) => {
+    if (!window.confirm("¿Deseas eliminar este incidente?")) return;
+    try {
+      await api.delete(`/incidents/${id}`);
+      alert("Incidente eliminado correctamente");
+      loadIncidents();
+    } catch (err) {
+      console.error("Error al eliminar incidente:", err);
+      alert("Error al eliminar incidente");
     }
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">🚨 Registro de Incidentes</h1>
+    <div>
+      <h2 className="text-2xl font-bold text-blue-700 mb-4">🚨 Registro de Incidentes</h2>
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-md rounded-lg p-4 mb-6"
-      >
+      <form onSubmit={handleSubmit} className="space-y-3 mb-6">
         <textarea
-          name="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           placeholder="Descripción del incidente"
-          value={form.description}
-          onChange={(e) =>
-            setForm({ ...form, description: e.target.value })
-          }
-          className="border p-2 rounded w-full mb-3"
-          required
+          className="w-full border p-2 rounded"
         />
         <input
           type="date"
-          name="date"
-          value={form.date}
-          onChange={(e) => setForm({ ...form, date: e.target.value })}
-          className="border p-2 rounded w-full mb-3"
-          required
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="w-full border p-2 rounded"
         />
         <input
-          type="file"
-          onChange={(e) => setPhoto(e.target.files[0])}
-          className="border p-2 rounded w-full mb-3"
+          type="text"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          placeholder="Ubicación"
+          className="w-full border p-2 rounded"
         />
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
+        <input type="file" onChange={(e) => setPhoto(e.target.files[0])} className="w-full" />
+
+        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
           Registrar Incidente
         </button>
       </form>
 
-      <ul>
-        {incidents.map((i) => (
-          <li
-            key={i.id}
-            className="border-b py-2 flex justify-between items-center"
-          >
-            <div>
-              <strong>{i.date}</strong> — {i.description}
-              <br />
-              {i.photo ? (
-                <img
-                  src={`http://localhost:4000/uploads/${i.photo}`}
-                  alt="foto incidente"
-                  className="w-24 mt-2 rounded"
-                />
-              ) : (
-                <span className="text-gray-500">Sin imagen</span>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
+      <h3 className="text-lg font-semibold mb-2">📋 Incidentes registrados</h3>
+
+      {incidents.length === 0 ? (
+        <p>No hay incidentes registrados.</p>
+      ) : (
+        <ul className="space-y-3">
+          {incidents.map((inc) => (
+            <li
+              key={inc.id}
+              className="p-3 bg-white shadow rounded flex justify-between items-center"
+            >
+              <div>
+                <strong>{inc.date}</strong> — {inc.description}
+                <br />
+                <small>{inc.location}</small>
+                {inc.photo && (
+                  <div>
+                    <img
+                      src={`http://localhost:4000/uploads/${inc.photo}`}
+                      alt="Evidencia"
+                      className="mt-2 w-32 rounded border"
+                    />
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => handleDelete(inc.id)}
+                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+              >
+                Eliminar
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

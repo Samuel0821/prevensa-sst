@@ -1,4 +1,4 @@
-
+// backend/src/controllers/company.controller.js
 const CompanyModel = require("../models/company.model");
 
 exports.createCompany = (req, res) => {

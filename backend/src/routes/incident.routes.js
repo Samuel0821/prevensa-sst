@@ -1,16 +1,21 @@
+// backend/src/routes/incident.routes.js
 const express = require("express");
 const router = express.Router();
-const controller = require("../controllers/incident.controller");
-const { upload } = require("../services/file.service");
-const { verifyToken } = require("../middlewares/auth.middleware");
+const multer = require("multer");
+const path = require("path");
+const { getAllIncidents, createIncident, deleteIncident } = require("../controllers/incident.controller");
 
-// 📸 Crear incidente (con imagen)
-router.post("/", verifyToken, upload.single("photo"), controller.createIncident);
+// Configuración de subida de archivos (imagenes)
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, path.join(__dirname, "../../uploads")),
+  filename: (req, file, cb) => cb(null, `${Date.now()}_${file.originalname}`)
+});
 
-// 📋 Listar incidentes
-router.get("/", verifyToken, controller.getAllIncidents);
+const upload = multer({ storage });
 
-// ❌ Eliminar incidente
-router.delete("/:id", verifyToken, controller.deleteIncident);
+// Rutas
+router.get("/", getAllIncidents);
+router.post("/", upload.single("photo"), createIncident);
+router.delete("/:id", deleteIncident);
 
 module.exports = router;

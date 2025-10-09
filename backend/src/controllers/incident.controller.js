@@ -1,62 +1,64 @@
+// backend/src/controllers/incident.controller.js
 const db = require("../config/db");
-const { upload } = require("../services/file.service");
+const path = require("path");
+const fs = require("fs");
 
-// Obtener todos los incidentes
+// 📦 Obtener todos los incidentes
 exports.getAllIncidents = (req, res) => {
   try {
-    const rows = db.prepare("SELECT * FROM incidents ORDER BY id DESC").all();
-    res.json(rows);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    const incidents = db.prepare("SELECT * FROM incidents ORDER BY created_at DESC").all();
+    res.json(incidents);
+  } catch (err) {
+    console.error("❌ Error al obtener incidentes:", err);
+    res.status(500).json({ message: "Error al obtener incidentes" });
   }
 };
 
-// Crear un nuevo incidente con imagen
+// 🧾 Crear un incidente
 exports.createIncident = (req, res) => {
   try {
-    const { company_id, title, description } = req.body;
+    console.log("📦 Body recibido:", req.body);
+    console.log("🖼️ Archivo recibido:", req.file);
+
+    const { description, date, location } = req.body;
     const photo = req.file ? req.file.filename : null;
 
     const stmt = db.prepare(`
-      INSERT INTO incidents (company_id, title, description, photo)
+      INSERT INTO incidents (description, date, location, photo)
       VALUES (?, ?, ?, ?)
     `);
+    const result = stmt.run(description, date, location, photo);
 
-    const result = stmt.run(company_id, title, description, photo);
-
-    res.status(201).json({
-      message: "Incidente creado correctamente",
-      incident: {
-        id: result.lastInsertRowid,
-        company_id,
-        title,
-        description,
-        photo,
-      },
-    });
-  } catch (error) {
-    console.error("Error al crear incidente:", error);
-    res.status(500).json({ error: error.message });
+    res.status(201).json({ message: "Incidente registrado correctamente", id: result.lastInsertRowid });
+  } catch (err) {
+    console.error("❌ Error al crear incidente:", err);
+    res.status(500).json({ message: "Error al registrar incidente" });
   }
 };
 
-// Eliminar incidente
+// 🗑️ Eliminar un incidente
 exports.deleteIncident = (req, res) => {
   try {
     const { id } = req.params;
-    const incident = db.prepare("SELECT * FROM incidents WHERE id = ?").get(id);
-    if (!incident) return res.status(404).json({ error: "Incidente no encontrado" });
 
+    // Buscar incidente antes de eliminar
+    const incident = db.prepare("SELECT * FROM incidents WHERE id = ?").get(id);
+    if (!incident) {
+      return res.status(404).json({ message: "Incidente no encontrado" });
+    }
+
+    // Eliminar archivo asociado (si existe)
     if (incident.photo) {
-      const fs = require("fs");
-      const path = require("path");
-      const photoPath = path.resolve(__dirname, "../../uploads", incident.photo);
+      const photoPath = path.join(__dirname, "../../uploads", incident.photo);
       if (fs.existsSync(photoPath)) fs.unlinkSync(photoPath);
     }
 
+    // Eliminar registro en la base de datos
     db.prepare("DELETE FROM incidents WHERE id = ?").run(id);
+
     res.json({ message: "Incidente eliminado correctamente" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error("❌ Error al eliminar incidente:", err);
+    res.status(500).json({ message: "Error al eliminar incidente" });
   }
 };

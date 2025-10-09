@@ -1,3 +1,4 @@
+// backend/src/services/file.service.js
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -17,7 +18,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(null, true),
 });
 

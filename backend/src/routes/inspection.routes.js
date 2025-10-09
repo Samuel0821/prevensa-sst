@@ -1,3 +1,4 @@
+// backend/src/routes/inspection.routes.js
 const express = require("express");
 const router = express.Router();
 const inspectionController = require("../controllers/inspection.controller");
