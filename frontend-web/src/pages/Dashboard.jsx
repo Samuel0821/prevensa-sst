@@ -1,3 +1,4 @@
+//frontend-web/src/pages/Dashboard.jsx
 import { useEffect, useState } from "react";
 import api from "../api/axiosConfig";
 import {
@@ -19,7 +20,6 @@ export default function Dashboard() {
     end_date: "",
   });
 
-  // 🔹 Cargar datos base
   useEffect(() => {
     loadData();
   }, [filters]);
@@ -39,14 +39,12 @@ export default function Dashboard() {
       let trainings = trainingsRes.data || [];
       let documents = documentsRes.data || [];
 
-      // 🔸 Filtrado por empresa
       if (filters.company_id) {
         incidents = incidents.filter(i => i.company_id == filters.company_id);
         trainings = trainings.filter(t => t.company_id == filters.company_id);
         documents = documents.filter(d => d.company_id == filters.company_id);
       }
 
-      // 🔸 Filtrado por fechas
       if (filters.start_date && filters.end_date) {
         const start = new Date(filters.start_date);
         const end = new Date(filters.end_date);
@@ -72,9 +70,8 @@ export default function Dashboard() {
     { name: "Canceladas", value: data.trainings.filter(t => t.status === "Cancelada").length },
   ];
 
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+  const COLORS = ["#2563EB", "#16A34A", "#FACC15", "#EF4444"];
 
-  // 📈 Totales (KPIs)
   const kpi = {
     companies: data.companies.length,
     incidents: data.incidents.length,
@@ -84,30 +81,28 @@ export default function Dashboard() {
     closedIncidents: data.incidents.filter(i => i.status === "closed").length,
   };
 
-  // 📄 Exportar reporte PDF
   const exportPDF = () => {
     const dashboard = document.getElementById("dashboard-content");
     html2canvas(dashboard).then(canvas => {
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
-      const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
       pdf.save("Reporte_Dashboard.pdf");
     });
   };
 
   return (
-    <div>
-      <h2 className="text-3xl font-bold text-blue-700 mb-4">📊 Dashboard General</h2>
+    <div className="max-w-7xl mx-auto p-6">
+      <h2 className="text-3xl font-extrabold text-gray-900 mb-6">Control Parental</h2>
 
-      {/* 🔹 Filtros */}
-      <div className="bg-white shadow p-4 rounded mb-6 flex flex-wrap gap-3 items-end">
+      {/* Filtros */}
+      <div className="bg-white shadow-sm border rounded-lg p-4 mb-6 flex flex-wrap gap-4 items-end">
         <div>
-          <label className="block text-sm font-semibold">Empresa</label>
+          <label className="block text-sm font-semibold text-gray-700">Empresa</label>
           <select
-            className="border p-2 rounded w-56"
+            className="border-gray-300 border rounded-lg p-2 w-56"
             value={filters.company_id}
             onChange={(e) => setFilters({ ...filters, company_id: e.target.value })}
           >
@@ -119,20 +114,20 @@ export default function Dashboard() {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold">Desde</label>
+          <label className="block text-sm font-semibold text-gray-700">Desde</label>
           <input
             type="date"
-            className="border p-2 rounded"
+            className="border-gray-300 border rounded-lg p-2"
             value={filters.start_date}
             onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold">Hasta</label>
+          <label className="block text-sm font-semibold text-gray-700">Hasta</label>
           <input
             type="date"
-            className="border p-2 rounded"
+            className="border-gray-300 border rounded-lg p-2"
             value={filters.end_date}
             onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
           />
@@ -140,47 +135,47 @@ export default function Dashboard() {
 
         <button
           onClick={() => setFilters({ company_id: "", start_date: "", end_date: "" })}
-          className="bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600"
+          className="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600"
         >
           Limpiar
         </button>
 
         <button
           onClick={exportPDF}
-          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 ml-auto"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 ml-auto"
         >
           📄 Exportar PDF
         </button>
       </div>
 
-      {/* 🔹 Contenido exportable */}
+      {/* Contenido exportable */}
       <div id="dashboard-content">
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <KpiCard title="Empresas Registradas" value={kpi.companies} color="bg-blue-500" />
-          <KpiCard title="Incidentes Totales" value={kpi.incidents} color="bg-red-500" />
-          <KpiCard title="Capacitaciones Totales" value={kpi.trainings} color="bg-yellow-500" />
-          <KpiCard title="Documentos Subidos" value={kpi.documents} color="bg-green-500" />
+          <KpiCard title="Empresas" value={kpi.companies} color="bg-blue-600" />
+          <KpiCard title="Incidentes" value={kpi.incidents} color="bg-red-500" />
+          <KpiCard title="Capacitaciones" value={kpi.trainings} color="bg-yellow-400" />
+          <KpiCard title="Documentos" value={kpi.documents} color="bg-green-500" />
         </div>
 
         {/* Porcentajes */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <KpiCard
-            title="Incidentes Cerrados"
+            title="Incidentes cerrados"
             value={`${Math.round((kpi.closedIncidents / (kpi.incidents || 1)) * 100)}%`}
-            color="bg-indigo-500"
+            color="bg-indigo-600"
           />
           <KpiCard
-            title="Capacitaciones Completadas"
+            title="Capacitaciones completadas"
             value={`${Math.round((kpi.completedTrainings / (kpi.trainings || 1)) * 100)}%`}
-            color="bg-teal-500"
+            color="bg-teal-600"
           />
         </div>
 
         {/* Gráficos */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-4 shadow rounded">
-            <h3 className="font-semibold text-lg mb-2">Incidentes por estado</h3>
+          <div className="bg-white border shadow-sm rounded-lg p-5">
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">Incidentes por estado</h3>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -188,7 +183,6 @@ export default function Dashboard() {
                   dataKey="value"
                   nameKey="name"
                   outerRadius={100}
-                  fill="#8884d8"
                   label
                 >
                   {incidentStatusData.map((entry, index) => (
@@ -201,11 +195,11 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-white p-4 shadow rounded">
-            <h3 className="font-semibold text-lg mb-2">Capacitaciones por estado</h3>
+          <div className="bg-white border shadow-sm rounded-lg p-5">
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">Capacitaciones por estado</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={trainingStatusData}>
-                <Bar dataKey="value" fill="#82ca9d" />
+                <Bar dataKey="value" fill="#2563EB" />
                 <Tooltip />
                 <Legend />
               </BarChart>
@@ -217,12 +211,11 @@ export default function Dashboard() {
   );
 }
 
-// 🔸 Componente auxiliar KPI
 function KpiCard({ title, value, color }) {
   return (
-    <div className={`${color} text-white p-4 rounded shadow text-center`}>
-      <h4 className="text-sm">{title}</h4>
-      <p className="text-2xl font-bold">{value}</p>
+    <div className={`${color} text-white p-5 rounded-lg shadow-sm flex flex-col items-center`}>
+      <h4 className="text-sm font-medium opacity-90">{title}</h4>
+      <p className="text-3xl font-bold">{value}</p>
     </div>
   );
 }

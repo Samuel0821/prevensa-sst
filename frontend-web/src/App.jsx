@@ -23,11 +23,11 @@ export default function App() {
   const isLoginPage = location.pathname === "/login";
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-50">
       {!isLoginPage && <Sidebar />}
       <div className="flex flex-col flex-1">
         {!isLoginPage && <Navbar />}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-8 overflow-y-auto">
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />

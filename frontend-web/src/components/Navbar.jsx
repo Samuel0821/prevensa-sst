@@ -14,24 +14,32 @@ export default function Navbar() {
   };
 
   return (
-    <header className="bg-white shadow-md p-4 flex justify-between items-center">
-      <h1 className="text-xl font-semibold text-gray-800">Prevensa SST</h1>
-      <div className="flex items-center gap-3">
-        <div className="text-right">
-          <span className="text-gray-800 text-sm font-semibold block">
-            {user.name || "Usuario"}
-          </span>
-          {user.role && (
-            <span className="text-gray-500 text-xs capitalize">{user.role}</span>
-          )}
+    <header className="bg-gradient-to-r from-blue-700 to-blue-500 text-white shadow-md">
+      <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+        {/* Logo + Título */}
+        <div className="flex items-center gap-3">
+          <div className="bg-white text-blue-700 font-extrabold rounded-full w-9 h-9 flex items-center justify-center shadow-md">
+          </div>
+          <h1 className="text-lg font-semibold tracking-wide">PREVENSA SST</h1>
         </div>
-        <button
-          onClick={handleLogout}
-          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
-        >
-          Cerrar sesión
-        </button>
+
+        {/* Usuario + botón */}
+        <div className="flex items-center gap-3">
+          <div className="text-right leading-tight">
+            <span className="block text-sm font-semibold">{user.name || "Usuario"}</span>
+            {user.role && (
+              <span className="text-xs text-blue-100 capitalize">{user.role}</span>
+            )}
+          </div>
+          <button
+            onClick={handleLogout}
+            className="bg-white text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50 text-sm font-semibold transition"
+          >
+            Cerrar sesión
+          </button>
+        </div>
       </div>
     </header>
   );
 }
+
