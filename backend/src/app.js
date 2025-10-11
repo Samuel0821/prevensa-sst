@@ -8,6 +8,7 @@ require("dotenv").config();
 // Importar rutas
 const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
 const companyRoutes = require("./routes/company.routes");
 const incidentRoutes = require("./routes/incident.routes");
 const trainingRoutes = require("./routes/training.routes");
@@ -37,6 +38,7 @@ app.use("/api/incidents", incidentRoutes);
 app.use("/api/trainings", trainingRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/inspections", inspectionRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // -------------------------
 // Ruta base
