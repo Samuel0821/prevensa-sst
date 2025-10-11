@@ -4,7 +4,12 @@ const db = require("../config/db");
 // Obtener todas las capacitaciones
 exports.getAllTrainings = (req, res) => {
   try {
-    const stmt = db.prepare("SELECT * FROM trainings ORDER BY date DESC");
+    const stmt = db.prepare(`
+      SELECT t.*, c.name AS company_name
+      FROM trainings t
+      LEFT JOIN companies c ON t.company_id = c.id
+      ORDER BY t.date DESC
+    `);
     const trainings = stmt.all();
     res.json(trainings);
   } catch (error) {
@@ -24,7 +29,9 @@ exports.createTraining = (req, res) => {
     `);
     const result = stmt.run(company_id || null, topic, trainer, date, participants, status);
 
-    res.status(201).json({ id: result.lastInsertRowid, message: "Capacitación creada correctamente ✅" });
+    res
+      .status(201)
+      .json({ id: result.lastInsertRowid, message: "Capacitación creada correctamente ✅" });
   } catch (error) {
     console.error("❌ Error al crear capacitación:", error);
     res.status(500).json({ message: "Error al crear capacitación" });
@@ -44,9 +51,8 @@ exports.updateTraining = (req, res) => {
     `);
     const result = stmt.run(company_id || null, topic, trainer, date, participants, status, id);
 
-    if (result.changes === 0) {
+    if (result.changes === 0)
       return res.status(404).json({ message: "Capacitación no encontrada ❌" });
-    }
 
     res.json({ message: "Capacitación actualizada correctamente ✅" });
   } catch (error) {
@@ -62,9 +68,8 @@ exports.deleteTraining = (req, res) => {
     const stmt = db.prepare("DELETE FROM trainings WHERE id = ?");
     const result = stmt.run(id);
 
-    if (result.changes === 0) {
+    if (result.changes === 0)
       return res.status(404).json({ message: "Capacitación no encontrada ❌" });
-    }
 
     res.json({ message: "Capacitación eliminada correctamente 🗑️" });
   } catch (error) {

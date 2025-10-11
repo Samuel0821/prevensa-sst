@@ -4,9 +4,11 @@ import api from "../api/axiosConfig";
 
 export default function Trainings() {
   const [trainings, setTrainings] = useState([]);
+  const [companies, setCompanies] = useState([]);
   const [editingId, setEditingId] = useState(null);
 
   const [formData, setFormData] = useState({
+    company_id: "",
     topic: "",
     trainer: "",
     date: "",
@@ -24,8 +26,19 @@ export default function Trainings() {
     }
   };
 
+  // 🔹 Cargar empresas
+  const loadCompanies = async () => {
+    try {
+      const res = await api.get("/companies");
+      setCompanies(res.data);
+    } catch (err) {
+      console.error("Error al cargar empresas:", err);
+    }
+  };
+
   useEffect(() => {
     loadTrainings();
+    loadCompanies();
   }, []);
 
   // 🔹 Manejar cambios de inputs
@@ -46,6 +59,7 @@ export default function Trainings() {
       }
 
       setFormData({
+        company_id: "",
         topic: "",
         trainer: "",
         date: "",
@@ -64,6 +78,7 @@ export default function Trainings() {
   const handleEdit = (training) => {
     setEditingId(training.id);
     setFormData({
+      company_id: training.company_id || "",
       topic: training.topic,
       trainer: training.trainer,
       date: training.date,
@@ -87,9 +102,25 @@ export default function Trainings() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-blue-700 mb-4">📚 Gestión de Capacitaciones</h2>
+      <h2 className="text-2xl font-bold text-blue-700 mb-4">
+        📚 Gestión de Capacitaciones
+      </h2>
 
       <form onSubmit={handleSubmit} className="space-y-3 mb-6">
+        <select
+          name="company_id"
+          value={formData.company_id}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+        >
+          <option value="">Seleccione empresa (opcional)</option>
+          {companies.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+
         <input
           type="text"
           name="topic"
@@ -147,6 +178,7 @@ export default function Trainings() {
             onClick={() => {
               setEditingId(null);
               setFormData({
+                company_id: "",
                 topic: "",
                 trainer: "",
                 date: "",
@@ -161,7 +193,9 @@ export default function Trainings() {
         )}
       </form>
 
-      <h3 className="text-lg font-semibold mb-2">📋 Capacitaciones registradas</h3>
+      <h3 className="text-lg font-semibold mb-2">
+        📋 Capacitaciones registradas
+      </h3>
 
       {trainings.length === 0 ? (
         <p>No hay capacitaciones registradas.</p>
@@ -178,6 +212,10 @@ export default function Trainings() {
                 <small>Capacitador: {t.trainer}</small>
                 <br />
                 <small>Participantes: {t.participants}</small>
+                <br />
+                <small>
+                  Empresa: <b>{t.company_name || "—"}</b>
+                </small>
                 <br />
                 <span
                   className={`text-sm font-semibold ${

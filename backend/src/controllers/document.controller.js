@@ -4,7 +4,13 @@ const fileService = require("../services/file.service");
 
 exports.getAllDocuments = (req, res) => {
   try {
-    const docs = db.prepare("SELECT * FROM documents ORDER BY uploaded_at DESC").all();
+    const docs = db.prepare(`
+      SELECT d.id, d.title, d.filename, d.uploaded_at,
+             c.name AS company_name
+      FROM documents d
+      LEFT JOIN companies c ON d.company_id = c.id
+      ORDER BY d.uploaded_at DESC
+    `).all();
     res.json(docs);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -23,6 +29,14 @@ exports.uploadDocument = (req, res) => {
     const company_id = req.body.company_id || null;
     const title = req.body.title || "Sin título";
     const filename = req.file.filename;
+
+    // Si se envía company_id, validar que exista
+    if (company_id) {
+      const exists = db.prepare("SELECT id FROM companies WHERE id = ?").get(company_id);
+      if (!exists) {
+        return res.status(400).json({ error: "La empresa seleccionada no existe" });
+      }
+    }
 
     const stmt = db.prepare(`
       INSERT INTO documents (company_id, title, filename)

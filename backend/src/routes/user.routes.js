@@ -1,9 +1,13 @@
-// backend/src/routes/user.routes.js
+//backend/src/routes/user.routes.js
 const express = require("express");
 const router = express.Router();
-const controller = require("../controllers/user.controller");
+const userController = require("../controllers/user.controller");
+const { verifyToken, isAdmin } = require("../middlewares/auth.middleware");
 
-router.get("/", controller.getUsers);
-router.post("/", controller.createUser);
+// ✅ Solo administradores pueden gestionar usuarios
+router.get("/", verifyToken, isAdmin, userController.getAll);
+router.post("/", verifyToken, isAdmin, userController.create);
+router.put("/:id", verifyToken, isAdmin, userController.update);
+router.delete("/:id", verifyToken, isAdmin, userController.delete);
 
 module.exports = router;

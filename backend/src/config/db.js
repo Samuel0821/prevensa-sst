@@ -17,14 +17,14 @@ db.pragma("foreign_keys = ON");
 // 🧍 USERS
 // ------------------------------
 db.prepare(`
-CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT,
-  email TEXT UNIQUE,
-  password TEXT,
-  role TEXT DEFAULT 'user',
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
-)
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT DEFAULT 'user',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
 `).run();
 
 // ------------------------------
@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS incidents (
   description TEXT,
   photo TEXT,
   location TEXT,
+  date TEXT,
   status TEXT DEFAULT 'open',
   reported_by INTEGER,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
