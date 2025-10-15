@@ -1,0 +1,20 @@
+
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    // Asegúrate de incluir las carpetas que contienen tu código (aunque sea JS)
+    // Esto es crucial para que VS Code y el bundler lo reconozcan
+    "rootDir": "./",
+    "baseUrl": "." 
+  },
+  // Incluye todas las carpetas que contienen código que debe ser compilado/analizado
+  "include": [
+    "**/*.js", 
+    "**/*.jsx", 
+    "**/*.ts", 
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
+}

@@ -20,7 +20,19 @@ const app = express();
 // -------------------------
 // 🔧 Middlewares
 // -------------------------
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:8081", // Expo Web
+      "http://localhost:19006", // Expo DevTools
+      "http://localhost:3000", // En caso de tener web react
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -32,7 +44,7 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 // 🚀 Rutas principales
 // -------------------------
 app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes); // ✅ Confirmado, activa y funcional
+app.use("/api/users", userRoutes);
 app.use("/api/companies", companyRoutes);
 app.use("/api/incidents", incidentRoutes);
 app.use("/api/trainings", trainingRoutes);
