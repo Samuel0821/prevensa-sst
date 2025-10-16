@@ -26,8 +26,9 @@ app.use(
       "http://localhost:8081", // Expo Web
       "http://localhost:19006", // Expo DevTools
       "http://localhost:3000", // En caso de tener web react
+      "http://localhost:5173",  // ⚡️ Vite frontend web
     ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE, OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
