@@ -1,94 +1,87 @@
-//app-mobile/app/index.js
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { useRouter } from "expo-router";
-import api from "../api/api";
+
+import React, { useState } from 'react';
+import { View, Text, TextInput, Button, Alert, StyleSheet, ActivityIndicator } from 'react-native';
+import { useAuth } from '../src/context/AuthContext';
 
 export default function LoginScreen() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const { login } = useAuth();
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Por favor ingresa tus credenciales");
-      return;
-    }
+    const handleLogin = async () => {
+        if (!username || !password) {
+            Alert.alert('Error', 'Por favor, ingrese usuario y contraseña.');
+            return;
+        }
 
-    try {
-      console.log("🚀 Enviando login a:", api.defaults.baseURL);
-      const response = await api.post("/auth/login", { email, password });
+        setLoading(true);
+        try {
+            // Delegamos TODA la lógica de inicio de sesión al AuthContext
+            await login({ username, password });
+            // No necesitamos hacer nada más aquí, el _layout se encargará de la redirección
+        } catch (error) {
+            // Si el contexto lanza un error (e.g., 400, 401, 404), lo mostramos
+            const errorMessage = 
+                error.response && error.response.data && error.response.data.message
+                ? error.response.data.message
+                : 'Usuario o contraseña incorrectos.';
+            Alert.alert('Error de Login', errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-      if (response.status === 200) {
-        Alert.alert("Éxito", "Inicio de sesión correcto");
-        router.replace("/dashboard");
-      }
-    } catch (error) {
-      console.error("❌ Error al iniciar sesión:", error.message);
-      Alert.alert("Error", "Credenciales inválidas o servidor inaccesible");
-    }
-  };
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Prevensa SST</Text>
-
-      <TextInput
-        placeholder="Correo electrónico"
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-        autoCapitalize="none"
-      />
-
-      <TextInput
-        placeholder="Contraseña"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        style={styles.input}
-      />
-
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Ingresar</Text>
-      </TouchableOpacity>
-    </View>
-  );
+    return (
+        <View style={styles.container}>
+            <Text style={styles.title}>Bienvenido</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Usuario (email)"
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+                keyboardType="email-address"
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Contraseña"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+            />
+            {loading ? (
+                <ActivityIndicator size="large" color="#0000ff" />
+            ) : (
+                <Button title="Iniciar Sesión" onPress={handleLogin} />
+            )}
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F8FAFC",
-    padding: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#1E40AF",
-    marginBottom: 30,
-  },
-  input: {
-    width: "100%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  button: {
-    backgroundColor: "#1E40AF",
-    padding: 15,
-    borderRadius: 10,
-    width: "100%",
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        padding: 20,
+        backgroundColor: '#f5f5f5', // Un color de fondo suave
+    },
+    title: {
+        fontSize: 28, // Tamaño más grande
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: 24, // Más espacio
+        color: '#333',
+    },
+    input: {
+        height: 50, // Más alto para mejor toque
+        borderColor: '#ddd', // Borde más suave
+        borderWidth: 1,
+        marginBottom: 16, // Más espacio
+        paddingHorizontal: 15, // Más padding interno
+        borderRadius: 8, // Bordes más redondeados
+        backgroundColor: '#fff',
+        fontSize: 16,
+    },
 });
+
