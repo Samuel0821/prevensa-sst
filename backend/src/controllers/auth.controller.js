@@ -1,27 +1,32 @@
 
-// backend/src/controllers/auth.controller.js
 const jwt = require("jsonwebtoken");
-const UserModel = require("../models/user.model");
+const bcrypt = require("bcryptjs");
+const db = require("../config/db");
 const SECRET = process.env.JWT_SECRET || "prevensa_secret_key";
 
 exports.register = (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role = 'user' } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Faltan campos obligatorios" });
     }
 
-    const existing = UserModel.findByEmail(email);
+    const existing = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
     if (existing) {
       return res.status(400).json({ message: "El correo ya está registrado" });
     }
 
-    const user = UserModel.create({ name, email, password, role });
+    const hashedPassword = bcrypt.hashSync(password, 8);
+
+    const stmt = db.prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
+    const info = stmt.run(name, email, hashedPassword, role);
+
+    const newUser = db.prepare("SELECT id, name, email, role FROM users WHERE id = ?").get(info.lastInsertRowid);
 
     res.status(201).json({
       message: "Usuario registrado correctamente",
-      user,
+      user: newUser,
     });
   } catch (err) {
     console.error("❌ Error en register:", err);
@@ -31,28 +36,24 @@ exports.register = (req, res) => {
 
 exports.login = (req, res) => {
   try {
-    // Acepta 'username' (de la app móvil) o 'email' (de la web)
     const { username, email, password } = req.body;
     const loginIdentifier = username || email;
 
-    // Validar campos requeridos
     if (!loginIdentifier || !password) {
-      return res
-        .status(400)
-        .json({ message: "Debe enviar email/usuario y contraseña" });
+      return res.status(400).json({ message: "Debe enviar email/usuario y contraseña" });
     }
 
-    // Busca al usuario por su email (que es lo que se usa como username)
-    const user = UserModel.findByEmail(loginIdentifier);
-    if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
+    const user = db.prepare("SELECT * FROM users WHERE email = ?").get(loginIdentifier);
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
 
-    const valid = UserModel.verifyPassword(password, user.password);
-    if (!valid)
+    const passwordIsValid = bcrypt.compareSync(password, user.password);
+    if (!passwordIsValid) {
       return res.status(401).json({ message: "Contraseña incorrecta" });
+    }
 
-    const token = jwt.sign({ id: user.id, role: user.role }, SECRET, {
-      expiresIn: "8h",
-    });
+    const token = jwt.sign({ id: user.id, role: user.role }, SECRET, { expiresIn: "8h" });
 
     res.json({
       message: "Login exitoso",
@@ -65,24 +66,16 @@ exports.login = (req, res) => {
   }
 };
 
-// Nueva función para obtener el perfil del usuario
 exports.getProfile = (req, res) => {
   try {
-    // El middleware 'protect' ya ha decodificado el token y ha puesto el usuario en req.user
     const userId = req.user.id;
-    const user = UserModel.findById(userId);
+    const user = db.prepare("SELECT id, name, email, role FROM users WHERE id = ?").get(userId);
 
     if (!user) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    // Devolvemos solo la información pública y segura del usuario
-    res.json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    });
+    res.json(user);
   } catch (err) {
     console.error("❌ Error en getProfile:", err);
     res.status(500).json({ message: "Error al obtener el perfil del usuario" });

@@ -1,3 +1,4 @@
+
 // backend/src/controllers/incident.controller.js
 const db = require("../config/db");
 const fileService = require("../services/file.service");
@@ -45,6 +46,30 @@ exports.createIncident = (req, res) => {
   }
 };
 
+// Función para actualizar el estado de un incidente
+exports.updateIncident = (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['abierto', 'cerrado'].includes(status)) {
+      return res.status(400).json({ error: "Estado no válido. Use 'abierto' o 'cerrado'." });
+    }
+
+    const stmt = db.prepare("UPDATE incidents SET status = ? WHERE id = ?");
+    const info = stmt.run(status, id);
+
+    if (info.changes === 0) {
+      return res.status(404).json({ error: "Incidente no encontrado." });
+    }
+
+    res.json({ message: "Incidente actualizado correctamente." });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
 exports.deleteIncident = (req, res) => {
   try {
     const { id } = req.params;
@@ -59,4 +84,3 @@ exports.deleteIncident = (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-

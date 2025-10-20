@@ -1,13 +1,16 @@
-
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const api = axios.create({
-  baseURL: 'http://localhost:4000/api',
+// --- IP ACTUALIZADA PARA LA RED MÓVIL ---
+const API_URL = 'http://10.253.13.232:4000/api'; // Cambiado a la URL base correcta
+export const ROOT_URL = API_URL; // Opcional: si necesitas la URL base en otro lugar
+
+const instance = axios.create({
+  baseURL: API_URL, // Usar la URL base correcta
 });
 
-// Interceptor para añadir el token a las cabeceras de las solicitudes protegidas
-api.interceptors.request.use(
+// Interceptor para inyectar el token en cada solicitud.
+instance.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('token');
     if (token) {
@@ -20,44 +23,9 @@ api.interceptors.request.use(
   }
 );
 
-// --- Auth --- //
-export const login = (credentials) => {
-  return api.post('/auth/login', credentials);
-};
+export const get = instance.get;
+export const post = instance.post;
+export const put = instance.put;
+export const remove = instance.delete;
 
-export const getProfile = () => {
-  return api.get('/auth/profile');
-};
-
-
-// --- Dashboard (Admin) --- //
-export const getDashboardStats = () => {
-  return api.get('/dashboard');
-};
-
-// --- Users (Admin) --- //
-export const getUsers = () => {
-  return api.get('/users');
-};
-
-// --- Incidents --- //
-export const getIncidents = () => {
-  return api.get('/incidents');
-};
-
-export const createIncident = (incidentData) => {
-  return api.post('/incidents', incidentData);
-};
-
-// --- Trainings --- //
-export const getTrainings = () => {
-  return api.get('/trainings');
-};
-
-// --- Documents --- //
-export const getDocuments = () => {
-  return api.get('/documents');
-};
-
-
-export default api;
+export default instance;

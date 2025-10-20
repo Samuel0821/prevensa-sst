@@ -1,4 +1,3 @@
-
 import { AuthProvider, useAuth } from '../src/context/AuthContext'; // Ruta corregida
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';

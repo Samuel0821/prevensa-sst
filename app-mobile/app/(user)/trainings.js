@@ -1,82 +1,181 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
-import { getTrainings } from '../../api/api';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState, useCallback } from 'react';
+import {
+    View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Button, Alert,
+    RefreshControl, ActivityIndicator
+} from 'react-native';
+import { useFocusEffect } from 'expo-router';
+import * as api from '../../api/api.js';
+import { FontAwesome5 } from '@expo/vector-icons';
 
-const TrainingCard = ({ item }) => (
-  <View style={styles.card}>
-    <Ionicons name="ios-school-outline" size={40} color="#007AFF" style={styles.cardIcon} />
-    <View style={styles.cardContent}>
-      <Text style={styles.cardTitle}>{item.title}</Text>
-      <Text style={styles.cardDescription}>{item.description}</Text>
-    </View>
-  </View>
+
+// --- Componente de Formulario para Crear/Editar Capacitación ---
+const TrainingForm = ({ visible, onSave, onCancel, training, setTraining, loading }) => (
+    <Modal visible={visible} animationType="slide" onRequestClose={onCancel}>
+        <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>{training.id ? "Editar Capacitación" : "Nueva Capacitación"}</Text>
+            <TextInput
+                placeholder="Nombre de la capacitación"
+                style={styles.input}
+                value={training.name}
+                onChangeText={(text) => setTraining({ ...training, name: text })}
+            />
+            <TextInput
+                placeholder="Descripción"
+                style={[styles.input, { height: 100 }]}
+                value={training.description}
+                onChangeText={(text) => setTraining({ ...training, description: text })}
+                multiline
+            />
+            <View style={styles.buttonContainer}>
+                <Button title="Guardar" onPress={onSave} disabled={loading} />
+                <Button title="Cancelar" onPress={onCancel} color="#FF3B30" />
+            </View>
+            {loading && <ActivityIndicator size="large" style={{ marginTop: 20 }} />}
+        </View>
+    </Modal>
 );
 
+// --- Pantalla Principal de Capacitaciones ---
 export default function TrainingsScreen() {
-  const [trainings, setTrainings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+    const [trainings, setTrainings] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const initialFormState = { id: null, name: '', description: '' };
+    const [formState, setFormState] = useState(initialFormState);
 
-  const fetchTrainings = async () => {
-    try {
-      const response = await getTrainings();
-      setTrainings(response.data);
-    } catch (error) {
-      console.error("Error fetching trainings:", error);
-    } 
-  };
+    const fetchData = async () => {
+        try {
+            const res = await api.get('/trainings');
+            setTrainings(res.data);
+        } catch (error) {
+            Alert.alert("Error", "No se pudieron cargar las capacitaciones.");
+        } finally {
+            setLoading(false);
+            setIsRefreshing(false);
+        }
+    };
 
-  useEffect(() => {
-    fetchTrainings().finally(() => setLoading(false));
-  }, []);
+    useFocusEffect(useCallback(() => { setLoading(true); fetchData(); }, []));
+    const onRefresh = useCallback(() => { setIsRefreshing(true); fetchData(); }, []);
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchTrainings();
-    setRefreshing(false);
-  }, []);
+    const openFormModal = (training = initialFormState) => {
+        setFormState(training);
+        setModalVisible(true);
+    };
 
-  if (loading) {
-    return <ActivityIndicator size="large" color="#007AFF" style={styles.centered} />;
-  }
+    const handleSave = async () => {
+        if (!formState.name) {
+            Alert.alert("Campo requerido", "El nombre de la capacitación es obligatorio.");
+            return;
+        }
+        setIsSubmitting(true);
+        const isUpdating = !!formState.id;
+        const method = isUpdating ? 'put' : 'post';
+        const url = isUpdating ? `/trainings/${formState.id}` : '/trainings';
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Capacitaciones</Text>
-      </View>
+        try {
+            await api[method](url, formState);
+            Alert.alert("Éxito", `Capacitación ${isUpdating ? 'actualizada' : 'creada'} correctamente.`);
+            setModalVisible(false);
+            fetchData(); // Recargar
+        } catch (error) {
+            Alert.alert("Error", `No se pudo ${isUpdating ? 'guardar' : 'crear'} la capacitación.`);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
-      {trainings.length === 0 ? (
-        <View style={styles.emptyContainer}>
-            <Ionicons name="ios-school" size={60} color="#CCC" />
-            <Text style={styles.emptyText}>No hay capacitaciones disponibles.</Text>
+    const handleDelete = (id) => {
+        Alert.alert("Confirmar Eliminación", "¿Estás seguro?", [
+            { text: "Cancelar" },
+            { 
+                text: "Eliminar", 
+                style: "destructive", 
+                onPress: async () => {
+                    try {
+                        await api.del(`/trainings/${id}`);
+                        Alert.alert("Éxito", "Capacitación eliminada.");
+                        fetchData(); // Recargar
+                    } catch (error) {
+                        Alert.alert("Error", "No se pudo eliminar la capacitación.");
+                    }
+                }
+            }
+        ]);
+    };
+    
+    if (loading && !isRefreshing) {
+        return <View style={styles.centered}><ActivityIndicator size="large" /></View>;
+    }
+
+    return (
+        <View style={styles.container}>
+            <Text style={styles.header}>Capacitaciones</Text>
+            <FlatList
+                data={trainings}
+                keyExtractor={(item) => item.id.toString()}
+                refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh}/>}
+                renderItem={({ item }) => (
+                    <View style={styles.card}>
+                        <TouchableOpacity onPress={() => openFormModal(item)} style={styles.cardContent}>
+                            <FontAwesome5 name="chalkboard-teacher" size={24} color="#007AFF" />
+                            <View style={styles.cardText}>
+                                <Text style={styles.cardTitle}>{item.name}</Text>
+                                <Text style={styles.cardDescription}>{item.description}</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteButton}>
+                            <FontAwesome5 name="trash-alt" size={18} color="#FF3B30" />
+                        </TouchableOpacity>
+                    </View>
+                )}
+                ListEmptyComponent={<Text style={styles.emptyText}>No hay capacitaciones programadas.</Text>}
+            />
+            <TouchableOpacity style={styles.fab} onPress={() => openFormModal()}> 
+                <FontAwesome5 name="plus" size={20} color="white" />
+            </TouchableOpacity>
+            <TrainingForm 
+                visible={modalVisible} 
+                onSave={handleSave} 
+                onCancel={() => setModalVisible(false)}
+                training={formState} 
+                setTraining={setFormState} 
+                loading={isSubmitting} 
+            />
         </View>
-      ) : (
-        <FlatList
-            data={trainings}
-            renderItem={({ item }) => <TrainingCard item={item} />}
-            keyExtractor={(item) => item._id}
-            contentContainerStyle={styles.list}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#007AFF']} />}
-        />
-      )}
-    </View>
-  );
+    );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F0F0F7' },
-  header: { backgroundColor: '#FFF', paddingHorizontal: 20, paddingTop: 50, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: '#EFEFEF' },
-  title: { fontSize: 28, fontWeight: 'bold' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  list: { padding: 10 },
-  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', borderRadius: 8, padding: 20, marginVertical: 5, marginHorizontal: 10, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 3 },
-  cardIcon: { marginRight: 20 },
-  cardContent: { flex: 1 },
-  cardTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
-  cardDescription: { fontSize: 14, color: '#555' },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 50 },
-  emptyText: { fontSize: 18, fontWeight: 'bold', color: '#555', marginTop: 10 },
+    container: { flex: 1, backgroundColor: '#F0F2F5' },
+    centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    header: { fontSize: 26, fontWeight: 'bold', padding: 20, backgroundColor: 'white' },
+    card: {
+        backgroundColor: 'white', 
+        marginVertical: 8, 
+        marginHorizontal: 12, 
+        borderRadius: 8, 
+        elevation: 3,
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15,
+    },
+    cardContent: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        flex: 1 
+    },
+    cardText: { marginLeft: 15, flex: 1 },
+    cardTitle: { fontSize: 18, fontWeight: 'bold' },
+    cardDescription: { fontSize: 14, color: '#555', marginTop: 4 },
+    deleteButton: { padding: 10, marginLeft: 10 },
+    fab: { position: 'absolute', right: 20, bottom: 20, backgroundColor: '#007AFF', width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', elevation: 8 },
+    modalContainer: { flex: 1, justifyContent: 'center', padding: 30, backgroundColor: '#F0F2F5' },
+    modalTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+    input: { borderWidth: 1, borderColor: '#ddd', padding: 12, borderRadius: 8, marginBottom: 15, backgroundColor: 'white' },
+    buttonContainer: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 },
+    emptyText: { textAlign: 'center', marginTop: 50, color: 'gray' },
 });

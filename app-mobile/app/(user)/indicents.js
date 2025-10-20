@@ -1,107 +1,162 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
-import { getIncidents } from '../../api/api';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState, useCallback } from 'react';
+import {
+  View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Button, Alert,
+  RefreshControl, ActivityIndicator
+} from 'react-native';
+import { useFocusEffect } from 'expo-router';
+import * as api from '../../api/api.js';
+import { FontAwesome5 } from '@expo/vector-icons';
 
-const IncidentCard = ({ incident }) => {
-  const statusColor = incident.status === 'PENDIENTE' ? '#FF9500' : '#34C759';
-  const date = new Date(incident.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 
-  return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle} numberOfLines={2}>{incident.description}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-          <Text style={styles.statusText}>{incident.status}</Text>
-        </View>
+const IncidentForm = ({ visible, onSave, onCancel, incident, setIncident, loading }) => (
+  <Modal visible={visible} animationType="slide" onRequestClose={onCancel}>
+    <View style={styles.modalContainer}>
+      <Text style={styles.modalTitle}>{incident.id ? "Editar Incidente" : "Nuevo Incidente"}</Text>
+      <TextInput
+        placeholder="Descripción del incidente"
+        style={[styles.input, { height: 100 }]} // Bigger text area
+        value={incident.description}
+        onChangeText={(text) => setIncident({ ...incident, description: text })}
+        multiline
+      />
+      <View style={styles.buttonContainer}>
+        <Button title="Guardar" onPress={onSave} disabled={loading} />
+        <Button title="Cancelar" onPress={onCancel} color="#FF3B30" />
       </View>
-      <Text style={styles.cardDate}>{`Reportado el ${date}`}</Text>
+      {loading && <ActivityIndicator size="large" style={{ marginTop: 20 }} />}
     </View>
-  );
-};
+  </Modal>
+);
 
 export default function IncidentsScreen() {
-  const router = useRouter();
   const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const initialFormState = { id: null, description: '' };
+  const [formState, setFormState] = useState(initialFormState);
 
-  const fetchIncidents = async () => {
+  const fetchData = async () => {
     try {
-      const response = await getIncidents();
-      setIncidents(response.data);
+      const res = await api.get('/incidents');
+      setIncidents(res.data);
     } catch (error) {
-      console.error("Error fetching incidents:", error);
+      Alert.alert("Error", "No se pudieron cargar los incidentes.");
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
-  // Cargar incidentes cuando la pantalla se enfoca
-  useFocusEffect(
-    useCallback(() => {
-      setLoading(true);
-      fetchIncidents().finally(() => setLoading(false));
-    }, [])
-  );
+  useFocusEffect(useCallback(() => { setLoading(true); fetchData(); }, []));
+  const onRefresh = useCallback(() => { setIsRefreshing(true); fetchData(); }, []);
 
-  // Función para refrescar la lista manualmente (pull-to-refresh)
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchIncidents();
-    setRefreshing(false);
-  }, []);
+  const openFormModal = (incident = initialFormState) => {
+    setFormState(incident);
+    setModalVisible(true);
+  };
 
-  if (loading) {
-    return <ActivityIndicator size="large" color="#007AFF" style={styles.centered} />;
+  const handleSave = async () => {
+    if (!formState.description) {
+      Alert.alert("Campo requerido", "La descripción es obligatoria.");
+      return;
+    }
+    setIsSubmitting(true);
+    const isUpdating = !!formState.id;
+    const method = isUpdating ? 'put' : 'post';
+    const url = isUpdating ? `/incidents/${formState.id}` : '/incidents';
+
+    try {
+      await api[method](url, formState);
+      Alert.alert("Éxito", `Incidente ${isUpdating ? 'actualizado' : 'creado'} correctamente.`);
+      setModalVisible(false);
+      fetchData();
+    } catch (error) {
+      Alert.alert("Error", `No se pudo ${isUpdating ? 'actualizar' : 'crear'} el incidente.`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = (id) => {
+    Alert.alert("Confirmar", "¿Estás seguro de eliminar este incidente?", [
+      { text: "Cancelar" },
+      {
+        text: "Eliminar", style: "destructive",
+        onPress: async () => {
+          try {
+            await api.del(`/incidents/${id}`);
+            fetchData();
+          } catch (error) {
+            Alert.alert("Error", "No se pudo eliminar el incidente.");
+          }
+        }
+      }
+    ]);
+  };
+
+  if (loading && !isRefreshing) {
+    return <View style={styles.centered}><ActivityIndicator size="large" /></View>;
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Incidentes</Text>
-      </View>
-
-      {incidents.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="ios-information-circle-outline" size={60} color="#CCC" />
-          <Text style={styles.emptyText}>No has reportado incidentes.</Text>
-          <Text style={styles.emptySubText}>¡Usa el botón (+) para empezar!</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={incidents}
-          renderItem={({ item }) => <IncidentCard incident={item} />}
-          keyExtractor={(item) => item._id}
-          contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#007AFF']} />}
-        />
-      )}
-
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => router.push('/(user)/create-incident')}
-      >
-        <Ionicons name="add" size={30} color="white" />
+      <Text style={styles.header}>Incidentes</Text>
+      <FlatList
+        data={incidents}
+        keyExtractor={(item) => item.id.toString()}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <TouchableOpacity onPress={() => openFormModal(item)} style={{ flex: 1 }}>
+              <Text style={styles.cardTitle}>Incidente #{item.id}</Text>
+              <Text>{item.description}</Text>
+              <Text style={styles.cardDate}>Reportado: {new Date(item.createdAt).toLocaleDateString()}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteButton}>
+              <FontAwesome5 name="trash-alt" size={18} color="#FF3B30" />
+            </TouchableOpacity>
+          </View>
+        )}
+        ListEmptyComponent={<Text style={styles.emptyText}>No hay incidentes reportados.</Text>}
+      />
+      <TouchableOpacity style={styles.fab} onPress={() => openFormModal()}>
+        <FontAwesome5 name="plus" size={20} color="white" />
       </TouchableOpacity>
+      <IncidentForm
+        visible={modalVisible}
+        onSave={handleSave}
+        onCancel={() => setModalVisible(false)}
+        incident={formState}
+        setIncident={setFormState}
+        loading={isSubmitting}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F0F0F7' },
-    header: { backgroundColor: '#FFF', paddingHorizontal: 20, paddingTop: 50, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: '#EFEFEF' },
-    title: { fontSize: 28, fontWeight: 'bold' },
-    centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    list: { padding: 10 },
-    card: { backgroundColor: '#FFF', borderRadius: 8, padding: 15, marginVertical: 5, marginHorizontal: 10, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 3 },
-    cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-    cardTitle: { fontSize: 16, fontWeight: '500', flex: 1, marginRight: 10 },
-    cardDate: { fontSize: 13, color: '#888', marginTop: 8 },
-    statusBadge: { borderRadius: 12, paddingVertical: 4, paddingHorizontal: 10 },
-    statusText: { color: '#FFF', fontSize: 11, fontWeight: 'bold' },
-    fab: { position: 'absolute', right: 30, bottom: 30, width: 60, height: 60, borderRadius: 30, backgroundColor: '#007AFF', justifyContent: 'center', alignItems: 'center', elevation: 8, shadowColor: '#000', shadowRadius: 5, shadowOpacity: 0.3, shadowOffset: { width: 0, height: 2 } },
-    emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 50 },
-    emptyText: { fontSize: 18, fontWeight: 'bold', color: '#555', marginTop: 10 },
-    emptySubText: { fontSize: 14, color: '#AAA', marginTop: 5 },
+  container: { flex: 1, backgroundColor: '#F0F2F5' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: { fontSize: 26, fontWeight: 'bold', padding: 20, backgroundColor: 'white' },
+  card: {
+    backgroundColor: 'white', marginVertical: 8, marginHorizontal: 12,
+    borderRadius: 8, padding: 15, elevation: 3, flexDirection: 'row',
+    justifyContent: 'space-between', alignItems: 'center'
+  },
+  cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#007AFF' },
+  cardDate: { fontSize: 12, color: 'gray', marginTop: 8 },
+  deleteButton: { padding: 10 },
+  fab: {
+    position: 'absolute', right: 20, bottom: 20, backgroundColor: '#007AFF',
+    width: 56, height: 56, borderRadius: 28, justifyContent: 'center',
+    alignItems: 'center', elevation: 8
+  },
+  modalContainer: { flex: 1, justifyContent: 'center', padding: 30, backgroundColor: '#F0F2F5' },
+  modalTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+  input: { borderWidth: 1, borderColor: '#ddd', padding: 12, borderRadius: 8, marginBottom: 15, backgroundColor: 'white' },
+  buttonContainer: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 },
+  emptyText: { textAlign: 'center', marginTop: 50, color: 'gray' }
 });

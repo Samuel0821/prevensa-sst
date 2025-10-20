@@ -1,7 +1,6 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as api from '../../api/api'; // RUTA DE IMPORTACIÓN CORREGIDA
+import * as api from '../../api/api';
 
 const AuthContext = createContext(null);
 
@@ -24,7 +23,7 @@ export function AuthProvider({ children }) {
       try {
         const token = await AsyncStorage.getItem('token');
         if (token) {
-          const response = await api.getProfile();
+          const response = await api.get('/profile'); // Corregido para usar el método correcto
           const userData = response.data;
           setUser(userData);
           setRole(userData.role);
@@ -49,7 +48,7 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     try {
-      const response = await api.login(credentials);
+      const response = await api.post('/login', credentials); // Corregido para usar el método correcto
       const { user: userData, token } = response.data;
       await AsyncStorage.setItem('token', token);
       await AsyncStorage.setItem('user', JSON.stringify(userData));
