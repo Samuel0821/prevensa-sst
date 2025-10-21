@@ -1,33 +1,33 @@
 
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, Alert, ActivityIndicator, RefreshControl
+  View, Text, StyleSheet, Alert, ActivityIndicator, RefreshControl
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import * as api from '../../api/api';
 
-// --- Pantalla de Usuarios para Rol de Usuario (Solo Vista) ---
-
-export default function UsersScreen() {
-  const [users, setUsers] = useState([]);
+// --- PANTALLA DE PERFIL DE USUARIO ---
+export default function ProfileScreen() {
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Función para obtener los datos de los usuarios desde la API
+  // Carga el perfil del usuario desde la API
   const fetchData = async () => {
     try {
-      const usersRes = await api.get('/users');
-      setUsers(usersRes.data);
+      // Llama a la nueva ruta segura que devuelve solo los datos del usuario logueado
+      const profileRes = await api.get('/auth/profile');
+      setProfile(profileRes.data);
     } catch (error) {
-      console.error("Error al cargar usuarios:", error);
-      Alert.alert("Error", "No se pudieron cargar los usuarios.");
+      console.error(error);
+      Alert.alert("Error", "No se pudo cargar tu perfil.");
     } finally {
       setLoading(false);
       setIsRefreshing(false);
     }
   };
 
-  // Hooks para cargar datos y refrescar la lista
+  // Hooks para cargar y refrescar datos
   useFocusEffect(useCallback(() => { setLoading(true); fetchData(); }, []));
   const onRefresh = useCallback(() => { setIsRefreshing(true); fetchData(); }, []);
 
@@ -36,78 +36,40 @@ export default function UsersScreen() {
     return <View style={styles.centered}><ActivityIndicator size="large" /></View>;
   }
 
+  // --- RENDERIZADO DEL PERFIL ---
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Usuarios del Sistema</Text>
-      <FlatList
-        data={users}
-        keyExtractor={(item) => item.id.toString()}
-        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh}/>}
-        renderItem={({ item }) => (
+      <Text style={styles.header}>Mi Perfil</Text>
+      <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh}>
+        {profile ? (
           <View style={styles.card}>
             <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>{item.name}</Text>
-                <Text>{item.email}</Text>
-                {/* Badge para mostrar el rol del usuario */}
-                <View style={[styles.badge, item.role === 'admin' ? styles.badgeAdmin : styles.badgeUser]}>
-                    <Text style={styles.badgeText}>{item.role}</Text>
+                <Text style={styles.cardTitle}>{profile.name}</Text>
+                <Text>{profile.email}</Text>
+                <View style={[styles.badge, profile.role === 'admin' ? styles.badgeAdmin : styles.badgeUser]}>
+                    <Text style={styles.badgeText}>{profile.role}</Text>
                 </View>
             </View>
           </View>
+        ) : (
+          <Text style={styles.emptyText}>No se pudo cargar la información del perfil.</Text>
         )}
-        ListEmptyComponent={<Text style={styles.emptyText}>No hay usuarios registrados.</Text>}
-      />
-      {/* No hay botón flotante (FAB) para añadir usuarios */}
+      </RefreshControl>
     </View>
   );
 }
 
+// --- ESTILOS (UNIFICADOS CON EL RESTO DE LA APP) ---
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F0F2F5' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { fontSize: 26, fontWeight: 'bold', padding: 20, backgroundColor: 'white' },
-  card: { 
-    backgroundColor: 'white', 
-    marginVertical: 8, 
-    marginHorizontal:12, 
-    borderRadius: 8, 
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-  },
-  cardContent: { 
-    padding: 15 
-  },
-  cardTitle: { 
-    fontSize: 18, 
-    fontWeight: 'bold', 
-    marginBottom: 2 
-  },
-  emptyText: { 
-    textAlign: 'center', 
-    marginTop: 50, 
-    color: 'gray', 
-    fontSize: 16 
-  },
-  badge: { 
-    borderRadius: 12, 
-    paddingVertical: 4, 
-    paddingHorizontal: 10, 
-    alignSelf: 'flex-start', 
-    marginTop: 10 
-  },
-  badgeAdmin: { 
-    backgroundColor: '#007AFF' 
-  },
-  badgeUser: { 
-    backgroundColor: '#34C759' 
-  },
-  badgeText: { 
-    color: 'white', 
-    fontWeight: 'bold', 
-    fontSize: 12 
-  },
+  card: { backgroundColor: 'white', marginVertical: 20, marginHorizontal: 15, borderRadius: 8, elevation: 3 },
+  cardContent: { padding: 20 },
+  cardTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 5 },
+  emptyText: { textAlign: 'center', marginTop: 50, color: 'gray', fontSize: 16 },
+  badge: { borderRadius: 12, paddingVertical: 5, paddingHorizontal: 12, alignSelf: 'flex-start', marginTop: 15 },
+  badgeAdmin: { backgroundColor: '#007AFF' },
+  badgeUser: { backgroundColor: '#34C759' },
+  badgeText: { color: 'white', fontWeight: 'bold', fontSize: 14, textTransform: 'capitalize' },
 });
-

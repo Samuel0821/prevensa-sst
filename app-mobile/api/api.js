@@ -1,12 +1,13 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// --- IP ACTUALIZADA PARA LA RED MÓVIL ---
-const API_URL = 'http://10.253.13.232:4000/api'; // Cambiado a la URL base correcta
-export const ROOT_URL = API_URL; // Opcional: si necesitas la URL base en otro lugar
+// --- IP Y URLS CORREGIDAS ---
+const BASE_URL = 'http://10.253.13.232:4000'; // URL raíz del servidor
+const API_URL = `${BASE_URL}/api`;          // URL específica para la API
+export const ROOT_URL = BASE_URL;           // Exportamos la URL raíz para los archivos
 
 const instance = axios.create({
-  baseURL: API_URL, // Usar la URL base correcta
+  baseURL: API_URL, // Axios usará la URL de la API
 });
 
 // Interceptor para inyectar el token en cada solicitud.

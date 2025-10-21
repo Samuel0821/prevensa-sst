@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Tabs, router } from 'expo-router';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext'; // Importar el hook de autenticación
@@ -17,8 +17,8 @@ const CustomHeader = () => {
   return (
     <View style={styles.headerContainer}>
       <View style={styles.logoContainer}>
-          <View style={styles.logoCircle} />
-          <Text style={styles.logoText}>PREVENSA SST</Text>
+          <Image source={require('../../assets/images/Logo_Prevensap.jpg')} style={styles.logo} />
+          <Text style={styles.logoText}>PREVENSAP</Text>
       </View>
       <View style={styles.userInfoContainer}>
         <View style={{alignItems: 'flex-end'}}>
@@ -78,11 +78,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  logoCircle: {
+  logo: {
       width: 30,
       height: 30,
       borderRadius: 15,
-      backgroundColor: 'white',
       marginRight: 10,
   },
   logoText: {

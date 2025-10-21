@@ -104,14 +104,21 @@ export default function DocumentsScreen() {
     formData.append('title', formState.title);
     formData.append('company_id', formState.company_id.toString());
     
+    // --- SOLUCIÓN DEFINITIVA ---
+    // Sanitizar el nombre del archivo para reemplazar espacios por guiones bajos.
+    // Esto previene errores 404 en el servidor al intentar acceder a archivos con espacios en la URL.
+    const sanitizedName = selectedFile.name.replace(/\s+/g, '_');
+
     if (Platform.OS === 'web') {
       const response = await fetch(selectedFile.uri);
       const blob = await response.blob();
-      formData.append('file', blob, selectedFile.name);
+      // Usar el nombre sanitizado al subir desde la web
+      formData.append('file', blob, sanitizedName);
     } else {
+      // Usar el nombre sanitizado al subir desde el móvil
       formData.append('file', {
         uri: selectedFile.uri,
-        name: selectedFile.name,
+        name: sanitizedName,
         type: selectedFile.mimeType || 'application/octet-stream',
       });
     }
@@ -163,9 +170,9 @@ export default function DocumentsScreen() {
         keyExtractor={(item) => item.id.toString()}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh}/>}
         renderItem={({ item }) => {
-          // SOLUCIÓN: Comprobar si item.url existe y es un string.
           const hasUrl = typeof item.url === 'string' && item.url;
-          const fullUrl = hasUrl ? `${ROOT_URL}/${item.url.startsWith('/') ? item.url.substring(1) : item.url}` : '';
+          // Se revierte el cambio anterior. La URL correcta se forma con /uploads/ y el nombre de archivo de la DB.
+          const fullUrl = hasUrl ? `${ROOT_URL}/uploads/${item.url}` : '';
 
           return (
             <View style={styles.card}>
@@ -176,7 +183,6 @@ export default function DocumentsScreen() {
                       <Text style={styles.cardSubtitle}><FontAwesome5 name="building"/> {item.company_name}</Text>
                   </View>
                   
-                  {/* Renderizar el enlace solo si hay URL, si no, un icono deshabilitado */}
                   {hasUrl ? (
                     <Link href={fullUrl} style={styles.actionButton} asChild>
                       <TouchableOpacity>

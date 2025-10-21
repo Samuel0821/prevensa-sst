@@ -1,7 +1,7 @@
 {
-  "name": "backend-prevensa",
+  "name": "backend-prevensap",
   "version": "1.0.0",
-  "description": "API REST Prevensa SST",
+  "description": "API REST Prevensap",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

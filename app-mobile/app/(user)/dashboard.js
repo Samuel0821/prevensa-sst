@@ -1,116 +1,178 @@
 
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import * as api from '../../api/api.js';
-import { FontAwesome5 } from '@expo/vector-icons';
+import * as api from '../../api/api'; // RUTA CORREGIDA
 
-
-// --- Componente de Tarjeta de Estadísticas ---
-const StatCard = ({ title, value, icon, color }) => (
-  <View style={styles.statCard}>
-    <FontAwesome5 name={icon} size={24} color={color} style={styles.statIcon} />
-    <Text style={styles.statValue}>{value}</Text>
-    <Text style={styles.statTitle}>{title}</Text>
+// Componente reutilizable para las tarjetas de estadísticas
+const StatCard = ({ title, value, color, icon }) => (
+  <View style={[styles.card, { borderTopColor: color }]}>
+    <Text style={styles.cardValue}>{value}</Text>
+    <Text style={styles.cardTitle}>{title}</Text>
   </View>
 );
 
-// --- Pantalla del Dashboard ---
+// Componente reutilizable para las tarjetas de progreso
+const ProgressCard = ({ title, percentage, color }) => (
+  <View style={[styles.progressCard, { backgroundColor: color }]}>
+    <Text style={styles.progressTitle}>{title}</Text>
+    <Text style={styles.progressPercentage}>{percentage}%</Text>
+  </View>
+);
+
 export default function DashboardScreen() {
-  const [stats, setStats] = useState({ incidents: 0, trainings: 0, documents: 0, users: 0 });
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchStats = async () => {
     try {
-      const [incidentsRes, trainingsRes, documentsRes, usersRes] = await Promise.all([
-        api.get('/incidents'),
-        api.get('/trainings'),
-        api.get('/documents'),
-        api.get('/users')
-      ]);
-      setStats({
-        incidents: incidentsRes.data.length || 0,
-        trainings: trainingsRes.data.length || 0,
-        documents: documentsRes.data.length || 0,
-        users: usersRes.data.length || 0
-      });
+      const response = await api.get('/stats/dashboard');
+      setStats(response.data);
     } catch (error) {
-      Alert.alert("Error", "No se pudieron cargar las estadísticas.");
-      console.error("Error fetching stats:", error);
+      console.error("Error fetching dashboard stats:", error);
+      // Aquí podrías mostrar un mensaje de error al usuario
     } finally {
       setLoading(false);
-      setIsRefreshing(false);
+      setRefreshing(false);
     }
   };
 
-  useFocusEffect(useCallback(() => { setLoading(true); fetchStats(); }, []));
-  const onRefresh = useCallback(() => { setIsRefreshing(true); fetchStats(); }, []);
+  // useFocusEffect se ejecuta cada vez que la pantalla entra en foco
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      fetchStats();
+    }, [])
+  );
 
-  if (loading && !isRefreshing) {
-    return <View style={styles.centered}><ActivityIndicator size="large" /></View>;
+  // Función para manejar el "pull-to-refresh"
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchStats();
+  };
+
+  if (loading && !refreshing) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text>Cargando panel...</Text>
+      </View>
+    );
   }
 
   return (
     <ScrollView 
       style={styles.container}
-      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <Text style={styles.header}>Resumen General</Text>
-      <View style={styles.statsContainer}>
-        <StatCard title="Incidentes" value={stats.incidents} icon="exclamation-triangle" color="#FF3B30" />
-        <StatCard title="Capacitaciones" value={stats.trainings} icon="chalkboard-teacher" color="#007AFF" />
-        <StatCard title="Documentos" value={stats.documents} icon="file-alt" color="#34C759" />
-        <StatCard title="Usuarios" value={stats.users} icon="users" color="#FF9500" />
-      </View>
+      <Text style={styles.header}>Panel de Control</Text>
 
-      <View style={styles.quickActions}>
-        <Text style={styles.quickActionsTitle}>Accesos Rápidos</Text>
-         {/* Los accesos rápidos se mantienen, pero la funcionalidad de crear es manejada por cada pantalla */}
-        <TouchableOpacity style={styles.actionButton} onPress={() => {/* Navegar a Incidentes */}}>
-          <FontAwesome5 name="exclamation-circle" size={20} color="#fff" />
-          <Text style={styles.actionButtonText}>Ver Incidentes</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => {/* Navegar a Capacitaciones */}}>
-          <FontAwesome5 name="plus-circle" size={20} color="#fff" />
-          <Text style={styles.actionButtonText}>Agendar Capacitación</Text>
-        </TouchableOpacity>
-      </View>
+      {stats ? (
+        <View>
+          <View style={styles.cardRow}>
+            <StatCard title="Empresas" value={stats.totalCompanies} color="#007AFF" />
+            <StatCard title="Incidentes" value={stats.totalIncidents} color="#FF3B30" />
+          </View>
+          <View style={styles.cardRow}>
+            <StatCard title="Capacitaciones" value={stats.totalTrainings} color="#FF9500" />
+            <StatCard title="Documentos" value={stats.totalDocuments} color="#34C759" />
+          </View>
+          
+          <View style={styles.progressRow}>
+             <ProgressCard title="Incidentes Cerrados" percentage={stats.incidentsClosedPercentage} color="#5856D6" />
+          </View>
+          <View style={styles.progressRow}>
+            <ProgressCard title="Capacitaciones Completadas" percentage={stats.trainingsCompletedPercentage} color="#00C7BE" />
+          </View>
+        </View>
+      ) : (
+        <View style={styles.centered}>
+            <Text style={styles.errorText}>No se pudieron cargar las estadísticas. Desliza hacia abajo para reintentar.</Text>
+        </View>
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F0F2F5' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { fontSize: 26, fontWeight: 'bold', paddingHorizontal: 20, paddingTop: 20, paddingBottom:10, backgroundColor: 'white' },
-  statsContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', padding: 10, backgroundColor:'white' },
-  statCard: { 
-    backgroundColor: '#FFFFFF', 
-    borderRadius: 8, 
-    padding: 15, 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    width: '45%', 
-    marginBottom: 15, 
-    elevation: 3,
-    shadowColor: '#000',
+  container: {
+    flex: 1,
+    backgroundColor: '#F0F2F5',
+    padding: 10,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  header: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 10,
+  },
+   progressRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 5,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 20,
+    flex: 1,
+    marginHorizontal: 5,
+    alignItems: 'center',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
+    shadowOpacity: 0.20,
+    shadowRadius: 1.41,
+    elevation: 2,
+    borderTopWidth: 4,
   },
-  statIcon: { marginBottom: 10 },
-  statValue: { fontSize: 24, fontWeight: 'bold', marginBottom: 5 },
-  statTitle: { fontSize: 14, color: '#666' },
-  quickActions: { marginTop: 20, paddingHorizontal: 20 },
-  quickActionsTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 15 },
-  actionButton: { 
-    backgroundColor: '#007AFF', 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    padding: 15, 
-    borderRadius: 8, 
-    marginBottom: 10 
+  cardTitle: {
+    fontSize: 14,
+    color: '#6C6C6E',
+    marginTop: 8,
+    fontWeight: '500',
   },
-  actionButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginLeft: 10 },
+  cardValue: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+  },
+  progressCard: {
+    borderRadius: 8,
+    padding: 15,
+    flex: 1,
+    marginHorizontal: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 80,
+  },
+  progressTitle: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  progressPercentage: {
+    fontSize: 24,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    marginTop: 5,
+  },
+  errorText: {
+      fontSize: 16,
+      color: '#8A8A8E',
+      textAlign: 'center'
+  }
 });

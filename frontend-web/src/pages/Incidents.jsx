@@ -2,6 +2,16 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 
+// --- FUNCIÓN DE UTILIDAD ---
+// Formatea una fecha en formato ISO (YYYY-MM-DDTHH:mm:ss.sssZ) a DD-MM-YYYY
+// Si la fecha ya está en formato YYYY-MM-DD, la convierte también.
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  // El .split('T')[0] es la clave: se queda solo con la parte de la fecha.
+  const [year, month, day] = dateString.split('T')[0].split('-');
+  return `${day}-${month}-${year}`;
+};
+
 export default function Incidents() {
   const [incidents, setIncidents] = useState([]);
   const [companies, setCompanies] = useState([]);
@@ -139,7 +149,9 @@ export default function Incidents() {
           {incidents.map((i) => (
             <tr key={i.id} className="border-t">
               <td className="p-2">{i.description}</td>
-              <td className="p-2">{i.date}</td>
+              {/* --- LÍNEA CORREGIDA --- */}
+              {/* Ahora la fecha se formatea antes de mostrarla */}
+              <td className="p-2">{formatDate(i.date)}</td>
               <td className="p-2">{i.location}</td>
               <td className="p-2">{i.company_name || "—"}</td>
               <td className="p-2">
@@ -170,5 +182,3 @@ export default function Incidents() {
     </div>
   );
 }
-
-

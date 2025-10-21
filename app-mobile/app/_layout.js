@@ -17,7 +17,7 @@ const InitialLayout = () => {
 
     if (user && !inApp) {
       // Si el usuario está autenticado, redirigir según su rol
-      const targetRoute = user.role === 'admin' ? '/(admin)/dashboard' : '/(user)/incidents';
+      const targetRoute = user.role === 'admin' ? '/(admin)/dashboard' : '/(user)/dashboard';
       router.replace(targetRoute);
     } else if (!user && inApp) {
       // Si no hay usuario y se intenta acceder a una ruta protegida, redirigir al login

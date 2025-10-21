@@ -1,124 +1,119 @@
 
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { useAuth } from '../../src/context/AuthContext'; 
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { Tabs, router } from 'expo-router';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useAuth } from '../../src/context/AuthContext'; // Importar el hook de autenticación
 
-// Definición del componente de la cabecera directamente en el layout
-const AppHeader = () => {
-  const { user, company, logout } = useAuth();
+// Componente de cabecera
+const CustomHeader = () => {
+  const { user, logout } = useAuth(); // Obtener datos del usuario y función de logout
 
-  if (!user) {
-    return <View style={styles.headerContainer} />;
-  }
+  const handleLogout = async () => {
+    await logout();
+    router.replace('/'); // Redirigir al login después de cerrar sesión
+  };
 
   return (
     <View style={styles.headerContainer}>
-        <View style={styles.userInfo}>
-            <FontAwesome5 name="user-circle" size={24} color="white" />
-            <View style={styles.userTextContainer}>
-                <Text style={styles.userName}>{user.name || 'Usuario'}</Text>
-                <Text style={styles.userRole}>{user.role === 'admin' ? 'Administrador' : 'Usuario'}</Text>
-            </View>
+      <View style={styles.logoContainer}>
+        <Image source={require('../../assets/images/Logo_Prevensap.jpg')} style={styles.logo} />
+        <Text style={styles.logoText}>PREVENSAP</Text>
+      </View>
+      <View style={styles.userInfoContainer}>
+        <View style={{alignItems: 'flex-end'}}>
+            <Text style={styles.userName}>{user?.name || 'Usuario'}</Text>
+            <Text style={styles.userRole}>{user?.role || 'Rol'}</Text>
         </View>
-        <View style={styles.companyInfo}>
-            <FontAwesome5 name="building" size={14} color="#E0E0E0" />
-            <Text style={styles.companyName}>{company?.name || 'Sin Empresa'}</Text>
-        </View>
-        <TouchableOpacity onPress={logout} style={styles.logoutButton}>
-            <FontAwesome5 name="sign-out-alt" size={24} color="white" />
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
         </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
 export default function UserLayout() {
   return (
-    <Tabs 
-      screenOptions={({ route }) => ({
-        header: () => <AppHeader />,
-        headerShown: true, 
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-          if (route.name === 'dashboard') {
-            iconName = focused ? 'ios-home' : 'ios-home-outline';
-          } else if (route.name === 'incidents') {
-            iconName = focused ? 'ios-alert-circle' : 'ios-alert-circle-outline';
-          } else if (route.name === 'trainings') {
-            iconName = focused ? 'ios-school' : 'ios-school-outline';
-          } else if (route.name === 'documents') {
-            iconName = focused ? 'ios-document-text' : 'ios-document-text-outline';
-          } else if (route.name === 'companies' || route.name === 'users') {
-            iconName = focused ? 'ios-business' : 'ios-business-outline';
-          }
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
+    <View style={{ flex: 1 }}>
+      <CustomHeader />
+      <Tabs screenOptions={({ route }) => ({
+        headerShown: false, // La cabecera por defecto de las pestañas se oculta
         tabBarActiveTintColor: '#007AFF',
         tabBarInactiveTintColor: 'gray',
-      })}
-    >
-      <Tabs.Screen name="dashboard" options={{ title: 'Dashboard' }} />
-      <Tabs.Screen name="incidents" options={{ title: 'Incidentes' }} />
-      <Tabs.Screen name="trainings" options={{ title: 'Capacitaciones' }} />
-      <Tabs.Screen name="documents" options={{ title: 'Documentos' }} />
-      <Tabs.Screen name="companies" options={{ title: 'Empresas' }} />
-      <Tabs.Screen name="users" options={{ title: 'Usuario' }} /> 
-    </Tabs>
+        tabBarIcon: ({ color, size }) => {
+          let iconName;
+          if (route.name === 'dashboard') iconName = 'tachometer-alt';
+          else if (route.name === 'companies') iconName = 'building';
+          else if (route.name === 'incidents') iconName = 'exclamation-triangle';
+          else if (route.name === 'trainings') iconName = 'chalkboard-teacher';
+          else if (route.name === 'documents') iconName = 'file-alt';
+          // --- Icono actualizado para el perfil ---
+          else if (route.name === 'users') iconName = 'user-alt';
+          return <FontAwesome5 name={iconName} size={size} color={color} />;
+        },
+      })}>
+        <Tabs.Screen name="dashboard" options={{ title: 'Panel' }} />
+        <Tabs.Screen name="companies" options={{ title: 'Empresas' }} />
+        <Tabs.Screen name="incidents" options={{ title: 'Incidentes' }} />
+        <Tabs.Screen name="trainings" options={{ title: 'Formación' }} />
+        <Tabs.Screen name="documents" options={{ title: 'Docs' }} />
+        {/* --- Título de la pestaña actualizado --- */}
+        <Tabs.Screen name="users" options={{ title: 'Mi Perfil' }} />
+      </Tabs>
+    </View>
   );
 }
 
-// Estilos para el componente de la cabecera
+// Estilos para la cabecera (sin cambios)
 const styles = StyleSheet.create({
-    headerContainer: {
-        backgroundColor: '#007AFF',
-        paddingTop: Platform.OS === 'android' ? 45 : 55,
-        paddingBottom: 15,
-        paddingHorizontal: 20,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderBottomLeftRadius: 15,
-        borderBottomRightRadius: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-    userInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
-    },
-    userTextContainer: {
-        marginLeft: 12,
-    },
-    userName: {
-        color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    userRole: {
-        color: '#E0E0E0',
-        fontSize: 14,
-    },
-    companyInfo: {
-        position: 'absolute',
-        bottom: 5,
-        left: 0,
-        right: 0,
-        alignItems: 'center',
-        flexDirection: 'row',
-        justifyContent: 'center',
-    },
-    companyName: {
-        color: '#E0E0E0',
-        fontSize: 12,
-        marginLeft: 5,
-    },
-    logoutButton: {
-        padding: 5,
-    },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#0052cc', 
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    paddingTop: 40, 
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logo: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      marginRight: 10,
+  },
+  logoText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  userInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  userName: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  userRole: {
+    color: '#E0E0E0',
+    fontSize: 12,
+    textTransform: 'capitalize',
+  },
+  logoutButton: {
+    backgroundColor: 'white',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginLeft: 15,
+  },
+  logoutButtonText: {
+    color: '#0052cc',
+    fontWeight: 'bold',
+  },
 });

@@ -34,7 +34,7 @@ export default function LoginScreen() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Bienvenido</Text>
+            <Text style={styles.title}>Prevensap</Text>
             <TextInput
                 style={styles.input}
                 placeholder="Usuario (email)"

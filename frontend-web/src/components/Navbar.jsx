@@ -1,5 +1,6 @@
 // frontend-web/src/components/Navbar.jsx
 import { useNavigate } from "react-router-dom";
+import logo from '../assets/Logo_Prevensap.jpg';
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -18,9 +19,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
         {/* Logo + Título */}
         <div className="flex items-center gap-3">
-          <div className="bg-white text-blue-700 font-extrabold rounded-full w-9 h-9 flex items-center justify-center shadow-md">
-          </div>
-          <h1 className="text-lg font-semibold tracking-wide">PREVENSA SST</h1>
+          <img src={logo} alt="PREVENSAP Logo" className="w-9 h-9 rounded-full shadow-md" />
+          <h1 className="text-lg font-semibold tracking-wide">PREVENSAP</h1>
         </div>
 
         {/* Usuario + botón */}
@@ -42,4 +42,3 @@ export default function Navbar() {
     </header>
   );
 }
-

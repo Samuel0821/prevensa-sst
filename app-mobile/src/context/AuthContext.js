@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
       try {
         const token = await AsyncStorage.getItem('token');
         if (token) {
-          const response = await api.get('/profile'); // Corregido para usar el método correcto
+          const response = await api.get('/auth/profile'); // Corregido para usar la ruta correcta
           const userData = response.data;
           setUser(userData);
           setRole(userData.role);
@@ -48,7 +48,7 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     try {
-      const response = await api.post('/login', credentials); // Corregido para usar el método correcto
+      const response = await api.post('/auth/login', credentials); // Corregido para usar la ruta correcta
       const { user: userData, token } = response.data;
       await AsyncStorage.setItem('token', token);
       await AsyncStorage.setItem('user', JSON.stringify(userData));

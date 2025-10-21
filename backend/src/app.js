@@ -55,7 +55,7 @@ app.use("/api/inspections", inspectionRoutes);
 app.use("/api/stats", statsRoutes);
 
 app.get("/", (req, res) => {
-  res.json({ message: "API Prevensa SST activa 🚀" });
+  res.json({ message: "API Prevensap activa 🚀" });
 });
 
 module.exports = app;

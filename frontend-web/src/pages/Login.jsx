@@ -29,7 +29,7 @@ export default function Login() {
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
       <form onSubmit={handleLogin} className="bg-white p-8 shadow-md rounded w-80 space-y-4">
-        <h2 className="text-2xl font-bold text-center text-blue-700">Prevensa SST</h2>
+        <h2 className="text-2xl font-bold text-center text-blue-700">Prevensap</h2>
         {error && <p className="text-red-600 text-sm text-center">{error}</p>}
         <input type="email" placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2 border rounded" required />
         <input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2 border rounded" required />
