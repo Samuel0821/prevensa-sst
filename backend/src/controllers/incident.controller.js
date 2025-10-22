@@ -2,6 +2,8 @@
 // backend/src/controllers/incident.controller.js
 const db = require("../config/db");
 const fileService = require("../services/file.service");
+// const NotificationService = require('../services/notification.service'); // Desactivado
+// const UserModel = require('../models/user.model'); // Desactivado
 
 exports.getAllIncidents = (req, res) => {
   try {
@@ -18,7 +20,7 @@ exports.getAllIncidents = (req, res) => {
   }
 };
 
-exports.createIncident = (req, res) => {
+exports.createIncident = async (req, res) => {
   try {
     console.log("📦 Body recibido:", req.body);
     console.log("🖼️ Archivo recibido:", req.file);
@@ -34,10 +36,30 @@ exports.createIncident = (req, res) => {
     }
 
     const stmt = db.prepare(`
-      INSERT INTO incidents (description, date, location, company_id, photo)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO incidents (description, date, location, company_id, photo, reported_by)
+      VALUES (?, ?, ?, ?, ?, ?)
     `);
-    const info = stmt.run(description, date, location, company_id || null, photo);
+    const info = stmt.run(description, date, location, company_id || null, photo, req.user.id);
+
+    // --- NOTIFICACIÓN A ADMINS (DESACTIVADA) ---
+    /* try {
+      const admins = UserModel.getAll().filter(u => u.role === 'admin');
+      const adminIds = admins.map(a => a.id);
+
+      if (adminIds.length > 0) {
+        await NotificationService.sendNotification(
+          adminIds,
+          'Nuevo Incidente Reportado',
+          `Se ha registrado un nuevo incidente: ${description}`,
+          { incidentId: String(info.lastInsertRowid), type: 'new_incident' } 
+        );
+      }
+    } catch (notificationError) {
+      console.error("Error al enviar la notificación:", notificationError);
+      // No bloqueamos la respuesta principal por un error de notificación
+    } */
+    console.log("🟡 Notificaciones para nuevos incidentes están desactivadas.");
+    // --- FIN NOTIFICACIÓN ---
 
     res.status(201).json({ id: info.lastInsertRowid, description, date, location, photo });
   } catch (error) {

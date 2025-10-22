@@ -1,3 +1,4 @@
+
 @import "tailwindcss";
 @import "@fontsource/inter/400.css";
 @import "@fontsource/inter/600.css";
@@ -94,6 +95,34 @@ textarea:focus {
   background-color: white;
   border-right: 1px solid #e2e8f0;
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.03);
+}
+
+/* ====== Notificaciones ====== */
+.notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1rem 1.5rem;
+  border-radius: 0.5rem;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  animation: fadeIn 0.5s, fadeOut 0.5s 4.5s;
+}
+
+.notification.success {
+  background-color: #10B981; /* Verde esmeralda */
+}
+
+.notification.error {
+  background-color: #EF4444; /* Rojo */
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 /* ====== Transiciones ====== */

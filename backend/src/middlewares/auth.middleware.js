@@ -1,8 +1,9 @@
 const jwt = require("jsonwebtoken");
 const SECRET = process.env.JWT_SECRET || "prevensa_secret_key";
 
+// Corregido: Se cambió el nombre de la función de 'verifyToken' a 'authenticate' para que coincida con la importación en las rutas.
 // ✅ Verifica que el token JWT sea válido
-exports.verifyToken = (req, res, next) => {
+exports.authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ message: "Token no proporcionado" });
 

@@ -1,31 +1,32 @@
-import { AuthProvider, useAuth } from '../src/context/AuthContext'; // Ruta corregida
+
+import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { initializeNotificationService } from '../src/services/notificationService'; // 1. Importar el servicio
 
 // Componente inicial que decide qué mostrar
 const InitialLayout = () => {
-  const { user, isLoading } = useAuth(); // Corregido: usa isLoading
+  const { user, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
-    // No hacer nada hasta que la carga inicial de autenticación haya terminado
     if (isLoading) return;
 
     const inApp = segments[0] === '(user)' || segments[0] === '(admin)';
 
     if (user && !inApp) {
-      // Si el usuario está autenticado, redirigir según su rol
+      // 2. Si el usuario está autenticado, iniciar el servicio de notificaciones
+      initializeNotificationService();
+
       const targetRoute = user.role === 'admin' ? '/(admin)/dashboard' : '/(user)/dashboard';
       router.replace(targetRoute);
     } else if (!user && inApp) {
-      // Si no hay usuario y se intenta acceder a una ruta protegida, redirigir al login
       router.replace('/');
     }
   }, [user, isLoading, segments, router]);
 
-  // Mientras carga la autenticación, muestra un indicador de actividad.
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -34,7 +35,6 @@ const InitialLayout = () => {
     );
   }
 
-  // Si la carga ha terminado, muestra la pantalla actual.
   return <Slot />;
 };
 

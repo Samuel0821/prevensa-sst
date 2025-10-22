@@ -2,13 +2,14 @@
 const Database = require("better-sqlite3");
 const path = require("path");
 const fs = require("fs");
+const bcrypt = require("bcryptjs"); // Import bcryptjs
 
 // 📁 Crear carpeta para la base de datos si no existe
 const dbDir = path.join(__dirname, "../../data");
 if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
 
 // 📦 Ruta del archivo SQLite
-const dbPath = path.join(dbDir, "prevensa.db");
+const dbPath = path.join(dbDir, "prevensap.db");
 const db = new Database(dbPath);
 
 db.pragma("foreign_keys = ON");
@@ -23,9 +24,40 @@ db.prepare(`
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     role TEXT DEFAULT 'user',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    fcm_token TEXT
   )
 `).run();
+
+// ✅ Verificar si existe la columna 'fcm_token' (por compatibilidad con versiones anteriores)
+try {
+  const columns = db.prepare("PRAGMA table_info(users)").all();
+  const hasFcmTokenColumn = columns.some((col) => col.name === "fcm_token");
+
+  if (!hasFcmTokenColumn) {
+    console.log("🛠️ Agregando columna 'fcm_token' a la tabla users...");
+    db.prepare("ALTER TABLE users ADD COLUMN fcm_token TEXT").run();
+    console.log("✅ Columna 'fcm_token' agregada correctamente.");
+  }
+} catch (err) {
+  console.error("⚠️ Error verificando/creando columna 'fcm_token':", err.message);
+}
+
+// ------------------------------
+// ✨ CREAR USUARIO ADMIN POR DEFECTO
+// ------------------------------
+try {
+  const adminUser = db.prepare("SELECT id FROM users WHERE email = ?").get("admin@prevensap.com");
+  if (!adminUser) {
+    const hashedPassword = bcrypt.hashSync("admin123", 8);
+    db.prepare(
+      "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)"
+    ).run("Admin Prevensap", "admin@prevensap.com", hashedPassword, "admin");
+    console.log("👨‍💼 Usuario administrador por defecto creado (admin@prevensap.com / admin123).");
+  }
+} catch (err) {
+  console.error("⚠️ Error al crear usuario admin por defecto:", err.message);
+}
 
 // ------------------------------
 // 🏢 COMPANIES

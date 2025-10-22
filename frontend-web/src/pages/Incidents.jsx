@@ -1,13 +1,12 @@
+
 // frontend-web/src/pages/Incidents.jsx
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import { useNotification } from "../context/NotificationContext"; // 1. Importar hook
 
 // --- FUNCIÓN DE UTILIDAD ---
-// Formatea una fecha en formato ISO (YYYY-MM-DDTHH:mm:ss.sssZ) a DD-MM-YYYY
-// Si la fecha ya está en formato YYYY-MM-DD, la convierte también.
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
-  // El .split('T')[0] es la clave: se queda solo con la parte de la fecha.
   const [year, month, day] = dateString.split('T')[0].split('-');
   return `${day}-${month}-${year}`;
 };
@@ -22,6 +21,7 @@ export default function Incidents() {
     company_id: "",
   });
   const [file, setFile] = useState(null);
+  const { addNotification } = useNotification(); // 2. Usar el hook
 
   useEffect(() => {
     loadIncidents();
@@ -34,6 +34,7 @@ export default function Incidents() {
       setIncidents(res.data);
     } catch (err) {
       console.error("Error al cargar incidentes:", err);
+      addNotification("Error al cargar los incidentes", "error");
     }
   };
 
@@ -49,7 +50,7 @@ export default function Incidents() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.description || !form.date || !form.location) {
-      alert("Todos los campos son obligatorios");
+      addNotification("Todos los campos son obligatorios", "error"); // 3. Reemplazar alert
       return;
     }
 
@@ -61,13 +62,13 @@ export default function Incidents() {
       await api.post("/incidents", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      alert("Incidente registrado correctamente");
+      addNotification("Incidente registrado correctamente"); // 3. Reemplazar alert
       setForm({ description: "", date: "", location: "", company_id: "" });
       setFile(null);
       loadIncidents();
     } catch (err) {
       console.error("Error al registrar incidente:", err);
-      alert("Error al registrar incidente");
+      addNotification("Error al registrar incidente", "error"); // 3. Reemplazar alert
     }
   };
 
@@ -75,18 +76,49 @@ export default function Incidents() {
     if (confirm("¿Seguro que deseas eliminar este incidente?")) {
       try {
         await api.delete(`/incidents/${id}`);
+        addNotification("Incidente eliminado con éxito");
         loadIncidents();
       } catch (err) {
         console.error("Error al eliminar incidente:", err);
-        alert("Error al eliminar incidente");
+        addNotification("Error al eliminar incidente", "error"); // 3. Reemplazar alert
       }
+    }
+  };
+
+  const handleDownloadReport = async () => {
+    try {
+      const response = await api.get("/reports/incidents", {
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'reporte_incidentes.pdf');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+    } catch (err) {
+      console.error("Error al descargar el reporte:", err);
+      addNotification("No se pudo generar el reporte", "error"); // 3. Reemplazar alert
     }
   };
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">⚠️ Gestión de Incidentes</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">⚠️ Gestión de Incidentes</h2>
+        <button 
+          onClick={handleDownloadReport}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        >
+          Descargar Reporte (PDF)
+        </button>
+      </div>
 
+      {/* ... (el resto del JSX del formulario y la tabla no cambia) ... */}
       <form
         onSubmit={handleSubmit}
         className="bg-white p-4 shadow rounded mb-6 space-y-2"
@@ -149,16 +181,15 @@ export default function Incidents() {
           {incidents.map((i) => (
             <tr key={i.id} className="border-t">
               <td className="p-2">{i.description}</td>
-              {/* --- LÍNEA CORREGIDA --- */}
-              {/* Ahora la fecha se formatea antes de mostrarla */}
               <td className="p-2">{formatDate(i.date)}</td>
               <td className="p-2">{i.location}</td>
               <td className="p-2">{i.company_name || "—"}</td>
               <td className="p-2">
                 {i.photo ? (
                   <a
-                    href={`http://localhost:4000/uploads/${i.photo}`}
+                    href={`http://localhost:4000/${i.photo}`}
                     target="_blank"
+                    rel="noopener noreferrer"
                     className="text-blue-600 underline"
                   >
                     Ver imagen
@@ -182,3 +213,4 @@ export default function Incidents() {
     </div>
   );
 }
+

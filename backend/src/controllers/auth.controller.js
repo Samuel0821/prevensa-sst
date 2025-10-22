@@ -6,7 +6,8 @@ const SECRET = process.env.JWT_SECRET || "prevensa_secret_key";
 
 exports.register = (req, res) => {
   try {
-    const { name, email, password, role = 'user' } = req.body;
+    // Se elimina 'role' de la desestructuración. Cualquier 'role' enviado en el body será ignorado.
+    const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Faltan campos obligatorios" });
@@ -18,6 +19,9 @@ exports.register = (req, res) => {
     }
 
     const hashedPassword = bcrypt.hashSync(password, 8);
+
+    // Se establece el rol a 'user' por defecto y de forma segura en el servidor.
+    const role = 'user';
 
     const stmt = db.prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
     const info = stmt.run(name, email, hashedPassword, role);

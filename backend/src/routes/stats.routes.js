@@ -2,10 +2,11 @@
 const express = require('express');
 const router = express.Router();
 const statsController = require('../controllers/stats.controller');
-const { verifyToken } = require('../middlewares/auth.middleware');
+// Corregido: Usar 'authenticate' en lugar de 'verifyToken'
+const { authenticate } = require('../middlewares/auth.middleware');
 
 // Definir la ruta para obtener las estadísticas del dashboard
 // Se requiere un token válido para acceder
-router.get('/dashboard', verifyToken, statsController.getDashboardStats);
+router.get('/dashboard', authenticate, statsController.getDashboardStats);
 
 module.exports = router;

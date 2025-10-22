@@ -13,6 +13,10 @@ class UserModel {
     return db.prepare("SELECT * FROM users WHERE email = ?").get(email);
   }
 
+  static findById(id) {
+    return db.prepare("SELECT * FROM users WHERE id = ?").get(id);
+  }
+
   static create(user) {
     const hashedPassword = bcrypt.hashSync(user.password, 10);
     const stmt = db.prepare(
@@ -34,6 +38,12 @@ class UserModel {
 
   static verifyPassword(password, hash) {
     return bcrypt.compareSync(password, hash);
+  }
+
+  static updateFcmToken(userId, fcmToken) {
+    const stmt = db.prepare('UPDATE users SET fcm_token = ? WHERE id = ?');
+    const result = stmt.run(fcmToken, userId);
+    return result.changes > 0;
   }
 }
 

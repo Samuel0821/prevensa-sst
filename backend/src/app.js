@@ -13,6 +13,8 @@ const trainingRoutes = require("./routes/training.routes");
 const documentRoutes = require("./routes/document.routes");
 const inspectionRoutes = require("./routes/inspection.routes");
 const statsRoutes = require("./routes/stats.routes");
+const reportRoutes = require("./routes/report.routes");
+const notificationRoutes = require("./routes/notification.routes");
 
 const app = express();
 
@@ -53,6 +55,8 @@ app.use("/api/trainings", trainingRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/inspections", inspectionRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "API Prevensap activa 🚀" });

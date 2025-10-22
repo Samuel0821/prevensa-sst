@@ -1,4 +1,4 @@
-//backend/src/controllers/user.controller.js
+
 const db = require("../config/db");
 const bcrypt = require("bcryptjs");
 
@@ -90,7 +90,8 @@ exports.update = (req, res) => {
 // ------------------------
 // 🗑️ Eliminar usuario
 // ------------------------
-exports.delete = (req, res) => {
+// Corregido: Se cambió el nombre de la función de 'delete' a 'deleteUser'
+exports.deleteUser = (req, res) => {
   try {
     const { id } = req.params;
     const result = db.prepare("DELETE FROM users WHERE id = ?").run(id);
@@ -103,5 +104,38 @@ exports.delete = (req, res) => {
   } catch (err) {
     console.error("❌ Error al eliminar usuario:", err.message);
     res.status(500).json({ error: "Error al eliminar usuario" });
+  }
+};
+
+// ------------------------
+// 📲 Guardar token de notificación push
+// ------------------------
+exports.savePushToken = (req, res) => {
+  try {
+    const { token } = req.body;
+    const userId = req.user.id; // Se obtiene del middleware de autenticación
+
+    if (!token) {
+      return res.status(400).json({ message: "El token de notificación es requerido." });
+    }
+
+    // Asegurarse de que la columna fcm_token existe. Si no, hay que añadirla a la tabla.
+    // Por ahora, asumimos que sí existe.
+    const stmt = db.prepare("UPDATE users SET fcm_token = ? WHERE id = ?");
+    const result = stmt.run(token, userId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ message: "Usuario no encontrado, no se pudo guardar el token." });
+    }
+
+    res.status(200).json({ message: "Token de notificación guardado correctamente." });
+
+  } catch (err) {
+    console.error("❌ Error al guardar el token de notificación:", err.message);
+    // Error común: la columna `fcm_token` no existe.
+    if (err.message.includes("no such column: fcm_token")) {
+        return res.status(500).json({ error: "Error de base de datos: La columna 'fcm_token' no existe en la tabla 'users'." });
+    }
+    res.status(500).json({ error: "Error interno del servidor al guardar el token." });
   }
 };
