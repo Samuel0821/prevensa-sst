@@ -2,6 +2,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import logo from '../assets/Logo_Prevensap.jpg'; // Importar el logo
 
 export default function Login() {
   const navigate = useNavigate();
@@ -19,7 +20,9 @@ export default function Login() {
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(user));
         navigate("/dashboard", { replace: true });
-      } else setError("Credenciales incorrectas");
+      } else {
+        setError("Credenciales incorrectas");
+      }
     } catch (err) {
       console.error("Error al iniciar sesión:", err);
       setError("Error al iniciar sesión. Intenta nuevamente.");
@@ -27,13 +30,40 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <form onSubmit={handleLogin} className="bg-white p-8 shadow-md rounded w-80 space-y-4">
-        <h2 className="text-2xl font-bold text-center text-blue-700">Prevensap</h2>
-        {error && <p className="text-red-600 text-sm text-center">{error}</p>}
-        <input type="email" placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2 border rounded" required />
-        <input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2 border rounded" required />
-        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Ingresar</button>
+    <div style={{ backgroundColor: '#0052cc' }} className="flex flex-col items-center justify-center h-screen">
+      
+      <img src={logo} alt="Prevensap Logo" className="w-40 h-40 mb-5" />
+      
+      <h2 className="text-4xl font-bold text-center text-white mb-6">Prevensap</h2>
+
+      <form onSubmit={handleLogin} className="p-8 rounded w-96 space-y-4">
+        {error && <p className="text-yellow-300 text-sm text-center">{error}</p>}
+        
+        <input 
+          type="email" 
+          placeholder="Correo electrónico" 
+          value={email} 
+          onChange={(e) => setEmail(e.target.value)} 
+          className="w-full p-3 border rounded bg-white text-gray-800" 
+          required 
+        />
+        
+        <input 
+          type="password" 
+          placeholder="Contraseña" 
+          value={password} 
+          onChange={(e) => setPassword(e.target.value)} 
+          className="w-full p-3 border rounded bg-white text-gray-800" 
+          required 
+        />
+        
+        <button 
+          type="submit" 
+          className="w-full text-black py-3 rounded font-bold" 
+          style={{ backgroundColor: '#FFC107' }}
+        >
+          Ingresar
+        </button>
       </form>
     </div>
   );

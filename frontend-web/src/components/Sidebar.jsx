@@ -55,7 +55,7 @@ export default function Sidebar() {
 
       {/* Pie del sidebar */}
       <div className="p-3 text-center text-xs text-gray-400 border-t border-gray-100">
-        Prevensa © {new Date().getFullYear()}
+        Prevensap {new Date().getFullYear()}
       </div>
     </aside>
   );

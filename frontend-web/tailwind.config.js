@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // 🎨 Paleta corporativa PREVENSA SST — sobria y profesional
+        // 🎨 Paleta corporativa PREVENSAP — sobria y profesional
         prevensa: {
           blue: "#1E40AF",       // Azul principal (botones y títulos)
           blueLight: "#3B82F6",  // Azul claro para hover o acentos

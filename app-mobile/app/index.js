@@ -1,7 +1,8 @@
-
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Button, Alert, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { useAuth } from '../src/context/AuthContext';
+
+const logo = require('../assets/images/Logo_Prevensap.jpg');
 
 export default function LoginScreen() {
     const [username, setUsername] = useState('');
@@ -17,11 +18,8 @@ export default function LoginScreen() {
 
         setLoading(true);
         try {
-            // Delegamos TODA la lógica de inicio de sesión al AuthContext
             await login({ username, password });
-            // No necesitamos hacer nada más aquí, el _layout se encargará de la redirección
         } catch (error) {
-            // Si el contexto lanza un error (e.g., 400, 401, 404), lo mostramos
             const errorMessage = 
                 error.response && error.response.data && error.response.data.message
                 ? error.response.data.message
@@ -34,10 +32,12 @@ export default function LoginScreen() {
 
     return (
         <View style={styles.container}>
+            <Image source={logo} style={styles.logo} resizeMode="contain" />
             <Text style={styles.title}>Prevensap</Text>
             <TextInput
                 style={styles.input}
                 placeholder="Usuario (email)"
+                placeholderTextColor="#A9A9A9" // Color del placeholder
                 value={username}
                 onChangeText={setUsername}
                 autoCapitalize="none"
@@ -46,14 +46,15 @@ export default function LoginScreen() {
             <TextInput
                 style={styles.input}
                 placeholder="Contraseña"
+                placeholderTextColor="#A9A9A9" // Color del placeholder
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
             />
             {loading ? (
-                <ActivityIndicator size="large" color="#0000ff" />
+                <ActivityIndicator size="large" color="#FFFFFF" />
             ) : (
-                <Button title="Iniciar Sesión" onPress={handleLogin} />
+                <Button title="Iniciar Sesión" onPress={handleLogin} color="#FFC107" /> // Botón con color llamativo
             )}
         </View>
     );
@@ -64,24 +65,29 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         padding: 20,
-        backgroundColor: '#f5f5f5', // Un color de fondo suave
+        backgroundColor: '#0052cc', // Fondo azul corporativo
+    },
+    logo: {
+        width: 150,
+        height: 150,
+        alignSelf: 'center',
+        marginBottom: 20,
     },
     title: {
-        fontSize: 28, // Tamaño más grande
+        fontSize: 32, 
         fontWeight: 'bold',
         textAlign: 'center',
-        marginBottom: 24, // Más espacio
-        color: '#333',
+        marginBottom: 24, 
+        color: '#FFFFFF', // Texto blanco
     },
     input: {
-        height: 50, // Más alto para mejor toque
-        borderColor: '#ddd', // Borde más suave
+        height: 50, 
+        borderColor: '#ddd', 
         borderWidth: 1,
-        marginBottom: 16, // Más espacio
-        paddingHorizontal: 15, // Más padding interno
-        borderRadius: 8, // Bordes más redondeados
+        marginBottom: 16, 
+        paddingHorizontal: 15, 
+        borderRadius: 8, 
         backgroundColor: '#fff',
         fontSize: 16,
     },
 });
-
