@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "app-mobile-prevensap",
-    "slug": "app-mobile-prevensap",
+    "name": "Prevensap",
+    "slug": "Prevensap",
     "version": "1.0.0",
     "orientation": "portrait",
     
-    "scheme": "appmobileprevensap",
+    "scheme": "Prevensap",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
