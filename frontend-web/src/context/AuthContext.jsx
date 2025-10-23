@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axiosConfig'; // Importar la instancia centralizada de Axios
 
 const AuthContext = createContext(null);
 
@@ -23,7 +23,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('http://localhost:4000/api/auth/login', { email, password });
+      // AJUSTE: Usar la instancia 'api' que ya tiene la URL base de producción
+      const response = await api.post('/auth/login', { email, password });
       const { token, user: userData } = response.data;
       localStorage.setItem('token', token);
       setUser(userData);
