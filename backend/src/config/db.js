@@ -49,11 +49,12 @@ try {
 try {
   const adminUser = db.prepare("SELECT id FROM users WHERE email = ?").get("admin@prevensap.com");
   if (!adminUser) {
-    const hashedPassword = bcrypt.hashSync("admin123", 8);
+    // 🔒 Contraseña segura por defecto
+    const hashedPassword = bcrypt.hashSync("Prevensa2025Admin!", 10);
     db.prepare(
       "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)"
     ).run("Admin Prevensap", "admin@prevensap.com", hashedPassword, "admin");
-    console.log("👨‍💼 Usuario administrador por defecto creado (admin@prevensap.com / admin123).");
+    console.log("👨‍💼 Usuario administrador por defecto creado.");
   }
 } catch (err) {
   console.error("⚠️ Error al crear usuario admin por defecto:", err.message);
