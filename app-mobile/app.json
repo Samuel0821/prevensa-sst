@@ -17,7 +17,8 @@
         "backgroundColor": "#0052cc"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.grisalistech.Prevensap"
     },
     "web": {
       "output": "static"
@@ -36,6 +37,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "cfc70654-a99d-4171-a5da-ab26e92870d3"
+      }
     }
   }
 }
