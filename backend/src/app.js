@@ -18,19 +18,27 @@ const notificationRoutes = require("./routes/notification.routes");
 
 const app = express();
 
+// --- CONFIGURACIÓN DE CORS PARA PRODUCCIÓN Y DESARROLLO ---
+const allowedOrigins = [
+  // Entornos de desarrollo
+  "http://localhost:8081", // Móvil (Android Studio)
+  "http://localhost:19006",// Móvil (Expo)
+  "http://localhost:3000",  // Frontend Web (Create React App)
+  "http://localhost:5173",  // Frontend Web (Vite)
+
+  // Entornos de producción
+  "https://prevensa-sst-22953878-fc82c.web.app" // ✅ URL CORRECTA de tu frontend en Firebase
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:8081",
-      "http://localhost:19006", 
-      "http://localhost:3000",
-      "http://localhost:5173",
-    ],
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE, OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
+
 
 app.use(morgan("dev"));
 app.use(express.json());

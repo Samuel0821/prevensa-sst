@@ -1,8 +1,9 @@
-//frontend-web/src/api/axiosConfig.js
+
 import axios from "axios";
 
+// La URL base apunta a tu backend desplegado en Render
 const api = axios.create({
-  baseURL: "http://localhost:4000/api",
+  baseURL: "https://prevensap-backend.onrender.com/api",
   headers: {
     "Content-Type": "application/json",
   },

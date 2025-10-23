@@ -1,0 +1,32 @@
+[debug] [2025-10-22T21:43:10.804Z] ----------------------------------------------------------------------
+[debug] [2025-10-22T21:43:10.811Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\lilia\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js init
+[debug] [2025-10-22T21:43:10.812Z] CLI Version:   14.20.0
+[debug] [2025-10-22T21:43:10.812Z] Platform:      win32
+[debug] [2025-10-22T21:43:10.813Z] Node Version:  v22.20.0
+[debug] [2025-10-22T21:43:10.813Z] Time:          Wed Oct 22 2025 16:43:10 GMT-0500 (hora estándar de Colombia)
+[debug] [2025-10-22T21:43:10.813Z] ----------------------------------------------------------------------
+[debug] 
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  C:\Users\lilia\SAMUEL_GRISALES\prevensa-sst
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] 
+[debug] [2025-10-22T21:43:35.243Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-10-22T21:43:35.243Z] > authorizing via signed-in user (samuelg2197@gmail.com)
+[debug] [2025-10-22T21:43:35.245Z] Checked if tokens are valid: true, expires at: 1761172949667
+[debug] [2025-10-22T21:43:35.245Z] Checked if tokens are valid: true, expires at: 1761172949667
+[debug] [2025-10-22T21:43:35.247Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=100
+[debug] [2025-10-22T21:43:35.958Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
+[debug] [2025-10-22T21:43:35.958Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
