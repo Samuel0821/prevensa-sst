@@ -2,6 +2,7 @@
 import axios from "axios";
 
 // La URL base apunta a tu backend desplegado en Render
+// Se añade este comentario para forzar la reconstrucción y limpiar el caché del despliegue.
 const api = axios.create({
   baseURL: "https://prevensap-backend.onrender.com/api",
   headers: {
