@@ -30,10 +30,22 @@ const allowedOrigins = [
   "https://prevensa-sst-22953878-fc82c.web.app" // ✅ URL CORRECTA de tu frontend en Firebase
 ];
 
+// --- LÓGICA DE CORS CORREGIDA ---
+// Esta nueva configuración permite orígenes de la lista Y peticiones sin origen (como las de la app móvil nativa)
 app.use(
   cors({
-    origin: allowedOrigins,
-    methods: ["GET", "POST", "PUT", "DELETE, OPTIONS"],
+    origin: function (origin, callback) {
+      // Permite peticiones sin 'origin' (como apps móviles o Postman)
+      if (!origin) return callback(null, true);
+
+      // Permite peticiones si el 'origin' está en la lista de permitidos
+      if (allowedOrigins.indexOf(origin) === -1) {
+        const msg = "La política de CORS para este sitio no permite acceso desde el origen especificado.";
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })

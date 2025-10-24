@@ -2,18 +2,12 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// --- CONFIGURACIÓN DE AXIOS PARA PRODUCCIÓN Y DESARROLLO ---
-
-// Usa la IP local para desarrollo (con tu IP) y la URL de Render para producción
-// Cambia '192.168.1.10' por la IP de tu computadora en tu red local.
-const baseURL = process.env.NODE_ENV === 'production'
-  ? 'https://prevensap-backend.onrender.com/api'
-  : 'http://192.168.1.10:4000/api'; // <--- ¡IMPORTANTE! CAMBIA ESTA IP
-
+// --- CONFIGURACIÓN DE AXIOS PARA PRODUCCIÓN ---
+// La baseURL apunta directamente al servidor de producción en Render.
 const api = axios.create({
-  baseURL: baseURL,
+  baseURL: 'https://prevensap-backend.onrender.com/api',
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json', // Corregido de 'jetson' a 'json'
   },
 });
 
