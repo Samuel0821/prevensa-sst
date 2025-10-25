@@ -5,8 +5,7 @@ import {
   ActivityIndicator, RefreshControl, Image, Platform, ScrollView
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import * as api from '../../api/api';
-import { ROOT_URL } from '../../api/api';
+import api from '../../api/api'; // CORREGIDO: Importación por defecto
 import { FontAwesome5 } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
@@ -185,7 +184,7 @@ export default function IncidentsScreen() {
       { text: "Cancelar" },
       { text: "Eliminar", style: "destructive", onPress: async () => {
           try {
-            await api.remove(`/incidents/${id}`);
+            await api.delete(`/incidents/${id}`); // CORREGIDO: se usa api.delete
             setLoading(true);
             fetchData();
           } catch (error) {
@@ -206,25 +205,29 @@ export default function IncidentsScreen() {
         data={incidents}
         keyExtractor={(item) => item.id.toString()}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh}/>}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            {item.photo && <Image source={{ uri: `${ROOT_URL}/uploads/${item.photo}` }} style={styles.incidentImage} />}
-            <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>{item.description}</Text>
-                <Text><FontAwesome5 name="building"/> {item.company_name}</Text>
-                <Text><FontAwesome5 name="map-marker-alt"/> {item.location}</Text>
-                <Text><FontAwesome5 name="calendar-alt"/> {new Date(item.date).toLocaleDateString()}</Text>
-                <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10}}>
-                    <TouchableOpacity onPress={() => toggleStatus(item)} style={[styles.statusBadge, { backgroundColor: item.status === 'abierto' ? '#FF9500' : '#34C759' }]}>
-                         <Text style={styles.statusText}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteButton}>
-                        <FontAwesome5 name="trash" size={18} color="#FF3B30" />
-                    </TouchableOpacity>
+        renderItem={({ item }) => {
+            const rootUrl = api.defaults.baseURL.replace('/api', '');
+            const photoUrl = item.photo ? `${rootUrl}/uploads/${item.photo}` : null;
+            return (
+              <View style={styles.card}>
+                {photoUrl && <Image source={{ uri: photoUrl }} style={styles.incidentImage} />}
+                <View style={styles.cardContent}>
+                    <Text style={styles.cardTitle}>{item.description}</Text>
+                    <Text><FontAwesome5 name="building"/> {item.company_name}</Text>
+                    <Text><FontAwesome5 name="map-marker-alt"/> {item.location}</Text>
+                    <Text><FontAwesome5 name="calendar-alt"/> {new Date(item.date).toLocaleDateString()}</Text>
+                    <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10}}>
+                        <TouchableOpacity onPress={() => toggleStatus(item)} style={[styles.statusBadge, { backgroundColor: item.status === 'abierto' ? '#FF9500' : '#34C759' }]}>
+                             <Text style={styles.statusText}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteButton}>
+                            <FontAwesome5 name="trash" size={18} color="#FF3B30" />
+                        </TouchableOpacity>
+                    </View>
                 </View>
-            </View>
-          </View>
-        )}
+              </View>
+            )
+        }}
         ListEmptyComponent={<Text style={styles.emptyText}>No hay incidentes registrados.</Text>}
       />
        <TouchableOpacity style={styles.fab} onPress={() => {

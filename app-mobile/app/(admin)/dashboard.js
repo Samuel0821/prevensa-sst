@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import * as api from '../../api/api'; // RUTA CORREGIDA
+import api from '../../api/api'; // RUTA CORREGIDA
 
 // Componente reutilizable para las tarjetas de estadísticas
 const StatCard = ({ title, value, color, icon }) => (

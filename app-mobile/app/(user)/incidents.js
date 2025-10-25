@@ -5,8 +5,7 @@ import {
   ActivityIndicator, RefreshControl, Image, Platform, ScrollView
 } from 'react-native';
 import { useFocusEffect, Link } from 'expo-router';
-import * as api from '../../api/api';
-import { ROOT_URL } from '../../api/api';
+import api from '../../api/api';
 import { FontAwesome5 } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
@@ -180,31 +179,35 @@ export default function IncidentsScreen() {
         data={incidents}
         keyExtractor={(item) => item.id.toString()}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh}/>}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            {item.photo && 
-              <Link href={`${ROOT_URL}/uploads/${item.photo}`} asChild>
-                <TouchableOpacity>
-                    <Image source={{ uri: `${ROOT_URL}/uploads/${item.photo}` }} style={styles.incidentImage} />
-                    <View style={styles.photoOverlay}>
-                        <FontAwesome5 name="eye" size={20} color="white" />
-                    </View>
-                </TouchableOpacity>
-              </Link>
-            }
-            <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>{item.description}</Text>
-                <Text style={styles.cardInfo}><FontAwesome5 name="building"/> {item.company_name}</Text>
-                <Text style={styles.cardInfo}><FontAwesome5 name="map-marker-alt"/> {item.location}</Text>
-                <Text style={styles.cardInfo}><FontAwesome5 name="calendar-alt"/> {new Date(item.date).toLocaleDateString()}</Text>
-                <View style={styles.cardFooter}>
-                    <TouchableOpacity onPress={() => toggleStatus(item)} style={[styles.statusBadge, { backgroundColor: item.status === 'abierto' ? '#FF9500' : '#34C759' }]}>
-                         <Text style={styles.statusText}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</Text>
-                    </TouchableOpacity>
-                </View>
+        renderItem={({ item }) => {
+          const rootUrl = api.defaults.baseURL.replace('/api', '');
+          const photoUrl = item.photo ? `${rootUrl}/uploads/${item.photo}` : null;
+          return (
+            <View style={styles.card}>
+              {photoUrl && 
+                <Link href={photoUrl} asChild>
+                  <TouchableOpacity>
+                      <Image source={{ uri: photoUrl }} style={styles.incidentImage} />
+                      <View style={styles.photoOverlay}>
+                          <FontAwesome5 name="eye" size={20} color="white" />
+                      </View>
+                  </TouchableOpacity>
+                </Link>
+              }
+              <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle}>{item.description}</Text>
+                  <Text style={styles.cardInfo}><FontAwesome5 name="building"/> {item.company_name}</Text>
+                  <Text style={styles.cardInfo}><FontAwesome5 name="map-marker-alt"/> {item.location}</Text>
+                  <Text style={styles.cardInfo}><FontAwesome5 name="calendar-alt"/> {new Date(item.date).toLocaleDateString()}</Text>
+                  <View style={styles.cardFooter}>
+                      <TouchableOpacity onPress={() => toggleStatus(item)} style={[styles.statusBadge, { backgroundColor: item.status === 'abierto' ? '#FF9500' : '#34C759' }]}>
+                           <Text style={styles.statusText}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</Text>
+                      </TouchableOpacity>
+                  </View>
+              </View>
             </View>
-          </View>
-        )}
+          )
+        }}
         ListEmptyComponent={<Text style={styles.emptyText}>No hay incidentes registrados.</Text>}
       />
        <TouchableOpacity style={styles.fab} onPress={() => { setFormState(initialFormState); setModalVisible(true); }}>

@@ -47,13 +47,13 @@ try {
 // ✨ CREAR USUARIO ADMIN POR DEFECTO
 // ------------------------------
 try {
-  const adminUser = db.prepare("SELECT id FROM users WHERE email = ?").get("admin@prevensap.com");
+  const adminUser = db.prepare("SELECT id FROM users WHERE email = ?").get("sistemas.grisalistech@prevensap.com");
   if (!adminUser) {
     // 🔒 Contraseña segura por defecto
-    const hashedPassword = bcrypt.hashSync("Prevensa2025Admin!", 10);
+    const hashedPassword = bcrypt.hashSync("GrisalisTech", 10);
     db.prepare(
       "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)"
-    ).run("Admin Prevensap", "admin@prevensap.com", hashedPassword, "admin");
+    ).run("Grisalis Technologies", "sistemas.grisalistech@prevensap.com", hashedPassword, "admin");
     console.log("👨‍💼 Usuario administrador por defecto creado.");
   }
 } catch (err) {

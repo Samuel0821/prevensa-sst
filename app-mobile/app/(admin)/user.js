@@ -5,7 +5,7 @@ import {
   ActivityIndicator, RefreshControl
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import * as api from '../../api/api';
+import api from '../../api/api';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 
@@ -108,7 +108,7 @@ export default function UsersScreen() {
       { text: "Cancelar" },
       { text: "Eliminar", style: "destructive", onPress: async () => {
           try {
-            await api.remove(`/users/${id}`);
+            await api.delete(`/users/${id}`);
             Alert.alert("Éxito", "Usuario eliminado.");
             setLoading(true);
             fetchData();

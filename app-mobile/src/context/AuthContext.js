@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as api from '../../api/api';
+import api from '../../api/api'; // CORREGIDO: Importación por defecto
 
 const AuthContext = createContext(null);
 
@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
       try {
         const token = await AsyncStorage.getItem('token');
         if (token) {
-          const response = await api.get('/auth/profile'); // Corregido para usar la ruta correcta
+          const response = await api.get('/auth/profile');
           const userData = response.data;
           setUser(userData);
           setRole(userData.role);
@@ -48,7 +48,8 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     try {
-      const response = await api.post('/auth/login', credentials); // Corregido para usar la ruta correcta
+      // Ahora `api.post` funcionará porque `api` es la instancia de Axios.
+      const response = await api.post('/auth/login', credentials);
       const { user: userData, token } = response.data;
       await AsyncStorage.setItem('token', token);
       await AsyncStorage.setItem('user', JSON.stringify(userData));

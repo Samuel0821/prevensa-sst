@@ -5,7 +5,7 @@ import {
   ActivityIndicator, RefreshControl, ScrollView, Platform
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import * as api from '../../api/api';
+import api from '../../api/api';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -191,7 +191,7 @@ export default function TrainingsScreen() {
       { text: "Cancelar" },
       { text: "Eliminar", style: "destructive", onPress: async () => {
           try {
-            await api.remove(`/trainings/${id}`);
+            await api.delete(`/trainings/${id}`);
             Alert.alert("Éxito", "Capacitación eliminada.");
             fetchData();
           } catch (error) {

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Button, Alert,
@@ -6,8 +5,7 @@ import {
 } from 'react-native';
 import { useFocusEffect, Link } from 'expo-router'; 
 import * as DocumentPicker from 'expo-document-picker';
-import * as api from '../../api/api';
-import { ROOT_URL } from '../../api/api'; 
+import api from '../../api/api';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 
@@ -151,7 +149,8 @@ export default function DocumentsScreen() {
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh}/>}
         renderItem={({ item }) => {
           const hasUrl = typeof item.url === 'string' && item.url;
-          const fullUrl = hasUrl ? `${ROOT_URL}/uploads/${item.url}` : '';
+          const rootUrl = api.defaults.baseURL.replace('/api', '');
+          const fullUrl = hasUrl ? `${rootUrl}/uploads/${item.url}` : '';
 
           return (
             <View style={styles.card}>

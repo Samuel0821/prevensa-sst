@@ -1,10 +1,22 @@
 
 import axios from "axios";
 
-// La URL base apunta a tu backend desplegado en Render
-// Se añade este comentario para forzar la reconstrucción y limpiar el caché del despliegue.
+// --- CONFIGURACIÓN DE AXIOS ---
+
+// 1. Desarrollo: Para pruebas en local
+//const API_URL_LOCAL = "http://localhost:4000/api";
+
+// 2. Producción: URL del backend desplegado en Render
+const API_URL_PRODUCTION = "https://prevensap-backend.onrender.com/api";
+
+
 const api = axios.create({
-  baseURL: "https://prevensap-backend.onrender.com/api",
+  // ✅ USA LA URL DE PRODUCCIÓN
+  baseURL: API_URL_PRODUCTION,
+  
+  // Para volver a desarrollo, comenta la línea de arriba y descomenta la siguiente:
+  // baseURL: API_URL_LOCAL,
+
   headers: {
     "Content-Type": "application/json",
   },
@@ -17,7 +29,6 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {
-      // Si no hay token, evitar continuar hacia rutas protegidas
       if (!config.url.includes("/auth/login")) {
         console.warn("🔒 No se encontró token en localStorage");
       }
@@ -33,17 +44,13 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       console.warn("⚠️ Token expirado o no autorizado.");
-
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-
-      // Evitar bucles infinitos si ya estamos en login
       if (window.location.pathname !== "/login") {
         alert("Sesión expirada. Por favor inicia sesión nuevamente.");
         window.location.href = "/login";
       }
     }
-
     return Promise.reject(error);
   }
 );

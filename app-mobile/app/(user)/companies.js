@@ -2,7 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import * as api from '../../api/api';
+import api from '../../api/api';
 
 export default function CompaniesScreen() {
   const [companies, setCompanies] = useState([]);

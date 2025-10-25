@@ -5,7 +5,7 @@ import {
   ActivityIndicator, RefreshControl, ScrollView, Platform
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import * as api from '../../api/api';
+import api from '../../api/api';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';

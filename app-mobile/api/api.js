@@ -2,12 +2,29 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// --- CONFIGURACIÓN DE AXIOS PARA PRODUCCIÓN ---
-// La baseURL apunta directamente al servidor de producción en Render.
+// --- CONFIGURACIÓN DE URLs DE API ---
+
+// 1. Desarrollo: Para probar en el CELULAR (Expo Go), usa la IP de tu computadora.
+//const API_URL_DEVICE = 'http://10.199.111.232:4000/api';
+
+// 2. Desarrollo: Para probar en la WEB LOCAL, usa localhost.
+//const API_URL_LOCAL = 'http://localhost:4000/api';
+
+// 3. Producción: URL del backend desplegado en Render.
+const API_URL_PRODUCTION = 'https://prevensap-backend.onrender.com/api';
+
+
+// --- CREACIÓN DE LA INSTANCIA DE AXIOS ---
 const api = axios.create({
-  baseURL: 'https://prevensap-backend.onrender.com/api',
+  // ✅ USA LA URL DE PRODUCCIÓN
+  baseURL: API_URL_PRODUCTION,
+  
+  // Si necesitas volver a desarrollo, comenta la línea de arriba y descomenta una de las siguientes:
+  // baseURL: API_URL_DEVICE, 
+  // baseURL: API_URL_LOCAL,
+
   headers: {
-    'Content-Type': 'application/json', // Corregido de 'jetson' a 'json'
+    'Content-Type': 'application/json',
   },
 });
 
@@ -30,12 +47,8 @@ api.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       console.warn('⚠️ Token expirado o no autorizado en app móvil.');
-      // Limpiar storage y navegar a la pantalla de login
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('user');
-      
-      // Aquí necesitarías acceso al sistema de navegación para redirigir
-      // Por ejemplo: navigation.navigate('Login');
+      await AsyncStorage.multiRemove(['token', 'user']);
+      // Idealmente, aquí se implementaría una redirección a la pantalla de Login.
     }
     return Promise.reject(error);
   }

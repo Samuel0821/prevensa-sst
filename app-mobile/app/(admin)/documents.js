@@ -6,8 +6,7 @@ import {
 } from 'react-native';
 import { useFocusEffect, Link } from 'expo-router'; 
 import * as DocumentPicker from 'expo-document-picker';
-import * as api from '../../api/api';
-import { ROOT_URL } from '../../api/api'; 
+import api from '../../api/api'; // CORREGIDO: Importación por defecto
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 
@@ -72,7 +71,7 @@ export default function DocumentsScreen() {
       setDocuments(docsRes.data);
       setCompanies(companiesRes.data);
     } catch (error) {      
-      Alert.alert("Error de Conexión", `No se pudieron cargar los datos. Verifica que el servidor esté en ${ROOT_URL}`);
+      Alert.alert("Error de Conexión", `No se pudieron cargar los datos. Verifica la conexión con el servidor.`);
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -104,18 +103,13 @@ export default function DocumentsScreen() {
     formData.append('title', formState.title);
     formData.append('company_id', formState.company_id.toString());
     
-    // --- SOLUCIÓN DEFINITIVA ---
-    // Sanitizar el nombre del archivo para reemplazar espacios por guiones bajos.
-    // Esto previene errores 404 en el servidor al intentar acceder a archivos con espacios en la URL.
     const sanitizedName = selectedFile.name.replace(/\s+/g, '_');
 
     if (Platform.OS === 'web') {
       const response = await fetch(selectedFile.uri);
       const blob = await response.blob();
-      // Usar el nombre sanitizado al subir desde la web
       formData.append('file', blob, sanitizedName);
     } else {
-      // Usar el nombre sanitizado al subir desde el móvil
       formData.append('file', {
         uri: selectedFile.uri,
         name: sanitizedName,
@@ -148,7 +142,7 @@ export default function DocumentsScreen() {
       { text: "Cancelar" },
       { text: "Eliminar", style: "destructive", onPress: async () => {
           try {
-            await api.remove(`/documents/${id}`);
+            await api.delete(`/documents/${id}`); // CORREGIDO: api.delete
             Alert.alert("Éxito", "Documento eliminado.");
             fetchData();
           } catch (error) {
@@ -171,8 +165,9 @@ export default function DocumentsScreen() {
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh}/>}
         renderItem={({ item }) => {
           const hasUrl = typeof item.url === 'string' && item.url;
-          // Se revierte el cambio anterior. La URL correcta se forma con /uploads/ y el nombre de archivo de la DB.
-          const fullUrl = hasUrl ? `${ROOT_URL}/uploads/${item.url}` : '';
+          // CORREGIDO: Construir la URL completa dinámicamente
+          const rootUrl = api.defaults.baseURL.replace('/api', '');
+          const fullUrl = hasUrl ? `${rootUrl}/uploads/${item.url}` : '';
 
           return (
             <View style={styles.card}>

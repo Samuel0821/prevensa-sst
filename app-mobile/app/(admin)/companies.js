@@ -2,8 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Button, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-// PASO 1: Importación simplificada
-import * as api from '../../api/api';
+import api from '../../api/api'; // CORREGIDO: Importación por defecto
 import { FontAwesome5 } from '@expo/vector-icons';
 
 const initialState = { id: null, name: '', nit: '', address: '', phone: '' };
@@ -75,10 +74,9 @@ export default function CompaniesScreen() {
     }
   };
 
-  // PASO 2: Función de borrado corregida para usar api.remove
   const performDelete = async (id) => {
     try {
-      await api.remove(`/companies/${id}`);
+      await api.delete(`/companies/${id}`); // CORREGIDO: se usa api.delete
       Alert.alert("Éxito", "Empresa eliminada correctamente.");
       fetchCompanies(); // Recargar la lista
     } catch (error) {
