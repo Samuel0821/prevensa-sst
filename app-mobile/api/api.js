@@ -1,14 +1,14 @@
-
+// app-mobile/api/api.js
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // --- CONFIGURACIÓN DE URLs DE API ---
 
 // 1. Desarrollo: Para probar en el CELULAR (Expo Go), usa la IP de tu computadora.
-//const API_URL_DEVICE = 'http://10.199.111.232:4000/api';
+const API_URL_DEVICE = 'http://10.199.111.232:4000/api';
 
 // 2. Desarrollo: Para probar en la WEB LOCAL, usa localhost.
-//const API_URL_LOCAL = 'http://localhost:4000/api';
+const API_URL_LOCAL = 'http://localhost:4000/api';
 
 // 3. Producción: URL del backend desplegado en Render.
 const API_URL_PRODUCTION = 'https://prevensap-backend.onrender.com/api';
@@ -16,12 +16,13 @@ const API_URL_PRODUCTION = 'https://prevensap-backend.onrender.com/api';
 
 // --- CREACIÓN DE LA INSTANCIA DE AXIOS ---
 const api = axios.create({
-  // ✅ USA LA URL DE PRODUCCIÓN
-  baseURL: API_URL_PRODUCTION,
+  // ✅ Para PRODUCCIÓN, descomenta esta línea y comenta las de desarrollo:
+  //baseURL: API_URL_PRODUCTION,
   
-  // Si necesitas volver a desarrollo, comenta la línea de arriba y descomenta una de las siguientes:
-  // baseURL: API_URL_DEVICE, 
-  // baseURL: API_URL_LOCAL,
+  // --- Configuración para DESARROLLO LOCAL ---
+  // Descomenta la línea según dónde vayas a probar:
+   //baseURL: API_URL_DEVICE,  // <-- Para probar en el CELULAR.
+   baseURL: API_URL_LOCAL,    // <-- Para probar en la WEB LOCAL (Navegador).
 
   headers: {
     'Content-Type': 'application/json',

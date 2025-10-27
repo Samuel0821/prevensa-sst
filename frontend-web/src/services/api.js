@@ -1,20 +1,21 @@
 
+// frontend-web/src/services/api.js
 import axios from "axios";
 
 // --- CONFIGURACIÓN DE AXIOS ---
 
 // 1. Desarrollo: Para pruebas en local
-//const API_URL_LOCAL = "http://localhost:4000/api";
+const API_URL_LOCAL = "http://localhost:4000/api";
 
 // 2. Producción: URL del backend desplegado en Render
 const API_URL_PRODUCTION = "https://prevensap-backend.onrender.com/api";
 
 const api = axios.create({
-  // ✅ USA LA URL DE PRODUCCIÓN
-  baseURL: API_URL_PRODUCTION,
+  // ✅ Para PRODUCCIÓN, descomenta esta línea y comenta la de desarrollo:
+  //baseURL: API_URL_PRODUCTION,
 
-  // Para volver a desarrollo, comenta la línea de arriba y descomenta la siguiente:
-  // baseURL: API_URL_LOCAL,
+  // --- Configuración para DESARROLLO LOCAL ---
+   baseURL: API_URL_LOCAL,
 
   headers: { "Content-Type": "application/json" },
 });
