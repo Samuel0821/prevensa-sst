@@ -4,10 +4,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // --- CONFIGURACIÓN DE URLs DE API ---
 
 // 1. Desarrollo: Para probar en el CELULAR (Expo Go), usa la IP de tu computadora.
-const API_URL_DEVICE = 'http://10.199.111.232:4000/api';
+//const API_URL_DEVICE = 'http://10.199.111.232:4000/api';
 
 // 2. Desarrollo: Para probar en la WEB LOCAL, usa localhost.
-const API_URL_LOCAL = 'http://localhost:4000/api';
+//const API_URL_LOCAL = 'http://localhost:4000/api';
 
 // 3. Producción: URL del backend desplegado en Render.
 const API_URL_PRODUCTION = 'https://prevensap-backend.onrender.com/api';

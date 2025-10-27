@@ -5,7 +5,7 @@ import axios from "axios";
 // --- CONFIGURACIÓN DE AXIOS ---
 
 // 1. Desarrollo: Para pruebas en local
-const API_URL_LOCAL = "http://localhost:4000/api";
+//const API_URL_LOCAL = "http://localhost:4000/api";
 
 // 2. Producción: URL del backend desplegado en Render
 const API_URL_PRODUCTION = "https://prevensap-backend.onrender.com/api";
