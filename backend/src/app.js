@@ -28,7 +28,7 @@ const allowedOrigins = [
   "http://localhost:5173",  // Frontend Web (Vite)
 
   // Entornos de producción
-  //"https://prevensa-sst-22953878-fc82c.web.app" // ✅ URL CORRECTA de tu frontend en Firebase
+  "https://prevensa-sst-22953878-fc82c.web.app" // ✅ URL CORRECTA de tu frontend en Firebase
 ];
 
 // --- LÓGICA DE CORS CORREGIDA ---

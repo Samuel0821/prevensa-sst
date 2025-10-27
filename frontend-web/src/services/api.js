@@ -12,10 +12,10 @@ const API_URL_PRODUCTION = "https://prevensap-backend.onrender.com/api";
 
 const api = axios.create({
   // ✅ Para PRODUCCIÓN, descomenta esta línea y comenta la de desarrollo:
-  //baseURL: API_URL_PRODUCTION,
+  baseURL: API_URL_PRODUCTION,
 
   // --- Configuración para DESARROLLO LOCAL ---
-   baseURL: API_URL_LOCAL,
+   //baseURL: API_URL_LOCAL,
 
   headers: { "Content-Type": "application/json" },
 });

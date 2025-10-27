@@ -1,4 +1,3 @@
-// app-mobile/api/api.js
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -17,12 +16,12 @@ const API_URL_PRODUCTION = 'https://prevensap-backend.onrender.com/api';
 // --- CREACIÓN DE LA INSTANCIA DE AXIOS ---
 const api = axios.create({
   // ✅ Para PRODUCCIÓN, descomenta esta línea y comenta las de desarrollo:
-  //baseURL: API_URL_PRODUCTION,
+  baseURL: API_URL_PRODUCTION,
   
   // --- Configuración para DESARROLLO LOCAL ---
   // Descomenta la línea según dónde vayas a probar:
-   //baseURL: API_URL_DEVICE,  // <-- Para probar en el CELULAR.
-   baseURL: API_URL_LOCAL,    // <-- Para probar en la WEB LOCAL (Navegador).
+   //baseURL: API_URL_DEVICE,  // <-- (ACTIVADO) Para probar en el CELULAR.
+   //baseURL: API_URL_LOCAL,    // <-- Para probar en la WEB LOCAL (Navegador).
 
   headers: {
     'Content-Type': 'application/json',

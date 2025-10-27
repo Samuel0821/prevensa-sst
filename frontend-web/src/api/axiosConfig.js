@@ -7,15 +7,15 @@ import axios from "axios";
 const API_URL_LOCAL = "http://localhost:4000/api";
 
 // 2. Producción: URL del backend desplegado en Render
-// const API_URL_PRODUCTION = "https://prevensap-backend.onrender.com/api";
+ const API_URL_PRODUCTION = "https://prevensap-backend.onrender.com/api";
 
 
 const api = axios.create({
   // ✅ USA LA URL DE PRODUCCIÓN
-  //baseURL: API_URL_PRODUCTION,
+  baseURL: API_URL_PRODUCTION,
   
   // Para volver a desarrollo, comenta la línea de arriba y descomenta la siguiente:
-   baseURL: API_URL_LOCAL,
+   //baseURL: API_URL_LOCAL,
 
   headers: {
     "Content-Type": "application/json",
