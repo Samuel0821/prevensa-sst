@@ -5,20 +5,20 @@ import { useAuth } from '../src/context/AuthContext';
 const logo = require('../assets/images/Logo_Prevensap.jpg');
 
 export default function LoginScreen() {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState(''); // <--- CORREGIDO: de username a email
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
 
     const handleLogin = async () => {
-        if (!username || !password) {
-            Alert.alert('Error', 'Por favor, ingrese usuario y contraseña.');
+        if (!email || !password) { // <--- CORREGIDO: de username a email
+            Alert.alert('Error', 'Por favor, ingrese email y contraseña.'); // <--- Mensaje corregido
             return;
         }
 
         setLoading(true);
         try {
-            await login({ username, password });
+            await login({ email, password }); // <--- CORREGIDO: Enviar email en lugar de username
         } catch (error) {
             const errorMessage = 
                 error.response && error.response.data && error.response.data.message
@@ -36,17 +36,17 @@ export default function LoginScreen() {
             <Text style={styles.title}>Prevensap</Text>
             <TextInput
                 style={styles.input}
-                placeholder="Usuario (email)"
-                placeholderTextColor="#A9A9A9" // Color del placeholder
-                value={username}
-                onChangeText={setUsername}
+                placeholder="Email"
+                placeholderTextColor="#A9A9A9"
+                value={email} // <--- CORREGIDO
+                onChangeText={setEmail} // <--- CORREGIDO
                 autoCapitalize="none"
                 keyboardType="email-address"
             />
             <TextInput
                 style={styles.input}
                 placeholder="Contraseña"
-                placeholderTextColor="#A9A9A9" // Color del placeholder
+                placeholderTextColor="#A9A9A9"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -54,7 +54,7 @@ export default function LoginScreen() {
             {loading ? (
                 <ActivityIndicator size="large" color="#FFFFFF" />
             ) : (
-                <Button title="Iniciar Sesión" onPress={handleLogin} color="#FFC107" /> // Botón con color llamativo
+                <Button title="Iniciar Sesión" onPress={handleLogin} color="#FFC107" />
             )}
         </View>
     );
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         padding: 20,
-        backgroundColor: '#0052cc', // Fondo azul corporativo
+        backgroundColor: '#0052cc',
     },
     logo: {
         width: 150,
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textAlign: 'center',
         marginBottom: 24, 
-        color: '#FFFFFF', // Texto blanco
+        color: '#FFFFFF',
     },
     input: {
         height: 50, 
