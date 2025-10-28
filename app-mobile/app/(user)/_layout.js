@@ -1,4 +1,4 @@
-
+// app-mobile/app/(user)/_layout.js
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Tabs, router } from 'expo-router';

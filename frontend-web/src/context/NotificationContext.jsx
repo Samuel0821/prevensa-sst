@@ -1,4 +1,4 @@
-
+// frontend-web/src/context/NotificationContext.jsx
 import React, { createContext, useState, useCallback } from 'react';
 
 // 1. Crear el Contexto

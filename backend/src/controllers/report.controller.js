@@ -1,4 +1,4 @@
-
+// backend/src/controllers/report.controller.js
 const ReportService = require('../services/report.service');
 
 class ReportController {

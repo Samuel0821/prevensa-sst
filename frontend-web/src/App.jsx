@@ -1,4 +1,4 @@
-// frontend-web/src/App.jsx
+//frontend-web/src/App.jsx
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";

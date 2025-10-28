@@ -1,3 +1,4 @@
+// backend/src/middlewares/auth.middleware.js
 const jwt = require("jsonwebtoken");
 const SECRET = process.env.JWT_SECRET || "prevensa_secret_key";
 

@@ -1,4 +1,4 @@
-
+// backend/src/services/notification.service.js
 const admin = require("../config/firebase");
 const UserModel = require("../models/user.model");
 

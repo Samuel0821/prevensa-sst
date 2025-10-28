@@ -1,3 +1,4 @@
+// backend/src/controllers/inspection.controller.js
 const db = require("../config/db");
 
 // Obtener todas las inspecciones

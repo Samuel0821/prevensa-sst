@@ -1,4 +1,4 @@
-
+// frontend-web/src/context/UIContext.jsx
 import React, { createContext, useState, useContext } from 'react';
 
 const UIContext = createContext(null);

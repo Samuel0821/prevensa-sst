@@ -1,4 +1,4 @@
-
+// backend/src/controllers/stats.controller.js
 const db = require('../config/db');
 
 exports.getDashboardStats = (req, res) => {

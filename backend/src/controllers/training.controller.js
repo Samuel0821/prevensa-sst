@@ -1,4 +1,4 @@
-// backend/src/controllers/training.controller.js
+//backend/src/controllers/training.controller.js
 const db = require("../config/db");
 
 // Obtener todas las capacitaciones

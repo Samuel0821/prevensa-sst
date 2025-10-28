@@ -1,4 +1,4 @@
-
+// backend/src/controllers/notification.controller.js
 const UserModel = require('../models/user.model');
 
 class NotificationController {

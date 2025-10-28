@@ -1,4 +1,3 @@
-
 // backend/src/controllers/incident.controller.js
 const db = require("../config/db");
 const fileService = require("../services/file.service");

@@ -1,4 +1,4 @@
-
+// frontend-web/src/context/AuthContext.jsx
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../services/api'; // CORREGIDO: Importar la instancia correcta de Axios
 

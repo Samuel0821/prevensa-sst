@@ -1,4 +1,4 @@
-
+// app-mobile/app/(admin)/trainings.js
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Button, Alert,

@@ -1,4 +1,4 @@
-
+// app-mobile/app/_layout.js
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';

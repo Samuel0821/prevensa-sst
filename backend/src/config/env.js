@@ -1,2 +1,2 @@
-// Variables de entorno
-require("dotenv").config();
+    // Variables de entorno
+    require("dotenv").config();

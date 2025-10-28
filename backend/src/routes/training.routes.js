@@ -1,4 +1,4 @@
-// backend/src/routes/training.routes.js
+//backend/src/routes/training.routes.js
 const express = require("express");
 const router = express.Router();
 const trainingController = require("../controllers/training.controller");

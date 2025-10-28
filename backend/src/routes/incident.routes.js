@@ -1,5 +1,4 @@
-
-// backend/src/routes/incident.routes.js
+//backend/src/routes/incident.routes.js
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");

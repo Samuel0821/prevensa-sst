@@ -1,4 +1,4 @@
-// frontend-web/src/components/Navbar.jsx
+//frontend-web/src/components/Navbar.jsx
 import { useNavigate } from "react-router-dom";
 import logo from '../assets/Logo_Prevensap.jpg';
 

@@ -1,4 +1,4 @@
-
+// app-mobile/app/(user)/dashboard.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from 'expo-router';

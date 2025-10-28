@@ -1,4 +1,4 @@
-// frontend-web/src/pages/Trainings.jsx
+//frontend-web/src/pages/Trainings.jsx
 import { useEffect, useState } from "react";
 import api from "../services/api"; // CORREGIDO: Importar la instancia correcta de Axios
 

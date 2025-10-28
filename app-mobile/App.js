@@ -1,4 +1,4 @@
-// app-mobile/App.js
+//app-mobile/App.js
 import 'react-native-gesture-handler';
 import { ExpoRoot } from 'expo-router';
 

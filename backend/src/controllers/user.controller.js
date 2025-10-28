@@ -1,4 +1,4 @@
-
+// backend/src/controllers/user.controller.js
 const db = require("../config/db");
 const bcrypt = require("bcryptjs");
 

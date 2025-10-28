@@ -1,3 +1,4 @@
+// backend/src/models/incident.model.js
 const db = require("../config/db");
 
 class IncidentModel {

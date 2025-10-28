@@ -1,4 +1,4 @@
-// backend/src/models/company.model.js
+//backend/src/models/company.model.js
 const db = require("../config/db");
 
 class CompanyModel {

@@ -1,4 +1,4 @@
-
+// app-mobile/app/profile.js
 import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import { useAuth } from '../src/context/AuthContext';

@@ -1,4 +1,4 @@
-
+// app-mobile/app/(user)/companies.js
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect } from 'expo-router';

@@ -1,4 +1,4 @@
-//frontend-web/src/pages/Dashboard.jsx
+// frontend-web/src/pages/Dashboard.jsx
 import { useEffect, useState } from "react";
 import api from "../services/api"; // CORREGIDO: Importar la instancia correcta de Axios
 import {

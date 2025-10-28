@@ -1,3 +1,4 @@
+// backend/src/routes/dashboard.routes.js
 const express = require("express");
 const router = express.Router();
 // Corregido: Usar 'authenticate' en lugar de 'verifyToken'

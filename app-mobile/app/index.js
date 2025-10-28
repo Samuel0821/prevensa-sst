@@ -1,3 +1,4 @@
+// app-mobile/app/index.js
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { useAuth } from '../src/context/AuthContext';

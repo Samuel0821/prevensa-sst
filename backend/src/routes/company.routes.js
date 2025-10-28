@@ -1,4 +1,4 @@
-// backend/src/routes/company.routes.js
+//backend/src/routes/company.routes.js
 const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/company.controller");
