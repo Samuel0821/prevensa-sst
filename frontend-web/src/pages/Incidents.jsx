@@ -22,6 +22,7 @@ export default function Incidents() {
   });
   const [file, setFile] = useState(null);
   const { addNotification } = useNotification(); // 2. Usar el hook
+  const API_URL_PRODUCTION = "https://prevensap-backend.onrender.com";
 
   useEffect(() => {
     loadIncidents();
@@ -187,7 +188,7 @@ export default function Incidents() {
               <td className="p-2">
                 {i.photo ? (
                   <a
-                    href={`http://localhost:4000/${i.photo}`}
+                    href={`${API_URL_PRODUCTION}/${i.photo}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline"
@@ -213,4 +214,3 @@ export default function Incidents() {
     </div>
   );
 }
-

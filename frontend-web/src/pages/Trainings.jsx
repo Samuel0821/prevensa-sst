@@ -1,6 +1,6 @@
 // frontend-web/src/pages/Trainings.jsx
 import { useEffect, useState } from "react";
-import api from "../api/axiosConfig";
+import api from "../services/api"; // CORREGIDO: Importar la instancia correcta de Axios
 
 export default function Trainings() {
   const [trainings, setTrainings] = useState([]);

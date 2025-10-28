@@ -1,6 +1,6 @@
 //frontend-web/src/pages/Dashboard.jsx
 import { useEffect, useState } from "react";
-import api from "../api/axiosConfig";
+import api from "../services/api"; // CORREGIDO: Importar la instancia correcta de Axios
 import {
   BarChart, Bar, PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";

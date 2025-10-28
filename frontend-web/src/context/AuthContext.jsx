@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import api from '../api/axiosConfig'; // Importar la instancia centralizada de Axios
+import api from '../services/api'; // CORREGIDO: Importar la instancia correcta de Axios
 
 const AuthContext = createContext(null);
 

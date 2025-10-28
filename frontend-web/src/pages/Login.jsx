@@ -1,6 +1,6 @@
 // frontend-web/src/pages/Login.jsx
 import { useState } from "react";
-import axios from "axios";
+import api from "../services/api"; // Importar la instancia de axios configurada
 import { useNavigate } from "react-router-dom";
 import logo from '../assets/Logo_Prevensap.jpg'; // Importar el logo
 
@@ -14,7 +14,8 @@ export default function Login() {
     e.preventDefault();
     setError("");
     try {
-      const res = await axios.post("http://localhost:4000/api/auth/login", { email, password });
+      // Usar la instancia 'api' que ya tiene la baseURL correcta
+      const res = await api.post("/auth/login", { email, password });
       const { token, user } = res.data;
       if (token) {
         localStorage.setItem("token", token);

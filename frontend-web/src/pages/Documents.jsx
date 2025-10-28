@@ -7,6 +7,7 @@ export default function Documents() {
   const [companies, setCompanies] = useState([]);
   const [form, setForm] = useState({ title: "", company_id: "" });
   const [file, setFile] = useState(null);
+  const API_URL_PRODUCTION = "https://prevensap-backend.onrender.com";
 
   useEffect(() => {
     loadDocuments();
@@ -124,7 +125,7 @@ export default function Documents() {
               <td className="p-2">{d.company_name || "—"}</td>
               <td className="p-2">
                 <a
-                  href={`http://localhost:4000/uploads/${d.filename}`}
+                  href={`${API_URL_PRODUCTION}/uploads/${d.filename}`}
                   target="_blank"
                   className="text-blue-600 underline"
                 >
@@ -146,5 +147,3 @@ export default function Documents() {
     </div>
   );
 }
-
-
