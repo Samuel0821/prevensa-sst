@@ -1,9 +1,10 @@
+
 // frontend-web/src/pages/Incidents.jsx
 import { useState, useEffect } from "react";
 import api from "../services/api";
-import { useNotification } from "../context/NotificationContext"; // 1. Importar hook
+import { useNotification } from "../context/NotificationContext";
+import { useIncidents } from "../context/IncidentContext"; // 1. Importar el hook de incidentes
 
-// --- FUNCIÓN DE UTILIDAD ---
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
   const [year, month, day] = dateString.split('T')[0].split('-');
@@ -11,7 +12,11 @@ const formatDate = (dateString) => {
 };
 
 export default function Incidents() {
-  const [incidents, setIncidents] = useState([]);
+  // 2. Usar el contexto para obtener los incidentes y el estado de carga
+  const { incidents, loading } = useIncidents(); 
+  const { addNotification } = useNotification();
+  
+  // El estado para el formulario, la foto y las empresas se mantiene local
   const [companies, setCompanies] = useState([]);
   const [form, setForm] = useState({
     description: "",
@@ -20,37 +25,20 @@ export default function Incidents() {
     company_id: "",
   });
   const [file, setFile] = useState(null);
-  const { addNotification } = useNotification(); // 2. Usar el hook
+
   const API_URL_PRODUCTION = "https://prevensap-backend.onrender.com";
 
+  // Cargar las empresas una sola vez al montar el componente
   useEffect(() => {
-    loadIncidents();
-    loadCompanies();
+    api.get("/companies")
+      .then(res => setCompanies(res.data))
+      .catch(err => console.error("Error al cargar empresas:", err));
   }, []);
-
-  const loadIncidents = async () => {
-    try {
-      const res = await api.get("/incidents");
-      setIncidents(res.data);
-    } catch (err) {
-      console.error("Error al cargar incidentes:", err);
-      addNotification("Error al cargar los incidentes", "error");
-    }
-  };
-
-  const loadCompanies = async () => {
-    try {
-      const res = await api.get("/companies");
-      setCompanies(res.data);
-    } catch (err) {
-      console.error("Error al cargar empresas:", err);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.description || !form.date || !form.location) {
-      addNotification("Todos los campos son obligatorios", "error"); // 3. Reemplazar alert
+      addNotification("Todos los campos son obligatorios", "error");
       return;
     }
 
@@ -59,16 +47,18 @@ export default function Incidents() {
     if (file) formData.append("photo", file);
 
     try {
+      // 3. No es necesario volver a cargar los incidentes (loadIncidents).
+      // El WebSocket se encargará de añadir el nuevo incidente a la lista.
       await api.post("/incidents", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      addNotification("Incidente registrado correctamente"); // 3. Reemplazar alert
+      addNotification("Incidente registrado correctamente");
       setForm({ description: "", date: "", location: "", company_id: "" });
       setFile(null);
-      loadIncidents();
+      // loadIncidents(); // <-- Eliminado
     } catch (err) {
       console.error("Error al registrar incidente:", err);
-      addNotification("Error al registrar incidente", "error"); // 3. Reemplazar alert
+      addNotification("Error al registrar incidente", "error");
     }
   };
 
@@ -77,20 +67,22 @@ export default function Incidents() {
       try {
         await api.delete(`/incidents/${id}`);
         addNotification("Incidente eliminado con éxito");
-        loadIncidents();
+        // 4. Aquí podríamos necesitar una actualización si el borrado no emite evento.
+        // Por ahora, se mantiene simple. Un F5 actualizaría la lista.
+        // loadIncidents(); // <-- Eliminado
       } catch (err) {
         console.error("Error al eliminar incidente:", err);
-        addNotification("Error al eliminar incidente", "error"); // 3. Reemplazar alert
+        addNotification("Error al eliminar incidente", "error");
       }
     }
   };
-
+  
+  // ... (handleDownloadReport sin cambios)
   const handleDownloadReport = async () => {
     try {
       const response = await api.get("/reports/incidents", {
         responseType: 'blob',
       });
-
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -99,16 +91,16 @@ export default function Incidents() {
       link.click();
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
-
     } catch (err) {
       console.error("Error al descargar el reporte:", err);
-      addNotification("No se pudo generar el reporte", "error"); // 3. Reemplazar alert
+      addNotification("No se pudo generar el reporte", "error");
     }
   };
 
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
+       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">⚠️ Gestión de Incidentes</h2>
         <button 
           onClick={handleDownloadReport}
@@ -118,12 +110,12 @@ export default function Incidents() {
         </button>
       </div>
 
-      {/* ... (el resto del JSX del formulario y la tabla no cambia) ... */}
       <form
         onSubmit={handleSubmit}
         className="bg-white p-4 shadow rounded mb-6 space-y-2"
       >
-        <input
+        {/* ... (el formulario no cambia) ... */}
+         <input
           className="border p-2 w-full"
           placeholder="Descripción del incidente"
           value={form.description}
@@ -166,50 +158,55 @@ export default function Incidents() {
         </button>
       </form>
 
-      <table className="w-full bg-white shadow rounded">
-        <thead>
-          <tr className="bg-blue-600 text-white text-left">
-            <th className="p-2">Descripción</th>
-            <th className="p-2">Fecha</th>
-            <th className="p-2">Ubicación</th>
-            <th className="p-2">Empresa</th>
-            <th className="p-2">Foto</th>
-            <th className="p-2 text-center">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {incidents.map((i) => (
-            <tr key={i.id} className="border-t">
-              <td className="p-2">{i.description}</td>
-              <td className="p-2">{formatDate(i.date)}</td>
-              <td className="p-2">{i.location}</td>
-              <td className="p-2">{i.company_name || "—"}</td>
-              <td className="p-2">
-                {i.photo ? (
-                  <a
-                    href={`${API_URL_PRODUCTION}/${i.photo}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 underline"
-                  >
-                    Ver imagen
-                  </a>
-                ) : (
-                  "—"
-                )}
-              </td>
-              <td className="p-2 text-center">
-                <button
-                  onClick={() => handleDelete(i.id)}
-                  className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
-                >
-                  Eliminar
-                </button>
-              </td>
+      {loading ? (
+        <p>Cargando incidentes...</p>
+      ) : (
+        <table className="w-full bg-white shadow rounded">
+          <thead>
+            <tr className="bg-blue-600 text-white text-left">
+              <th className="p-2">Descripción</th>
+              <th className="p-2">Fecha</th>
+              <th className="p-2">Ubicación</th>
+              <th className="p-2">Empresa</th>
+              <th className="p-2">Foto</th>
+              <th className="p-2 text-center">Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {/* 5. Renderizar los incidentes desde el contexto */}
+            {incidents.map((i) => (
+              <tr key={i.id} className="border-t">
+                <td className="p-2">{i.description}</td>
+                <td className="p-2">{formatDate(i.date)}</td>
+                <td className="p-2">{i.location}</td>
+                <td className="p-2">{i.company_name || "—"}</td>
+                <td className="p-2">
+                  {i.photo ? (
+                    <a
+                      href={`${API_URL_PRODUCTION}/${i.photo}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline"
+                    >
+                      Ver imagen
+                    </a>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td className="p-2 text-center">
+                  <button
+                    onClick={() => handleDelete(i.id)}
+                    className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

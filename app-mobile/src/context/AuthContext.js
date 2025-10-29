@@ -1,7 +1,9 @@
+
 // app-mobile/src/context/AuthContext.js
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import api from '../../api/api'; // CORREGIDO: Importación por defecto
+import { api } from '../../api/api';
+import { initializeNotificationService } from '../services/notificationService'; // 1. Importar el servicio
 
 const AuthContext = createContext(null);
 
@@ -30,6 +32,10 @@ export function AuthProvider({ children }) {
           setRole(userData.role);
           await AsyncStorage.setItem('user', JSON.stringify(userData));
           await AsyncStorage.setItem('userRole', userData.role);
+
+          // 2. Inicializar notificaciones si el usuario ya está logueado
+          await initializeNotificationService();
+          
         } else {
           setUser(null);
           setRole(null);
@@ -49,7 +55,6 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     try {
-      // Ahora `api.post` funcionará porque `api` es la instancia de Axios.
       const response = await api.post('/auth/login', credentials);
       const { user: userData, token } = response.data;
       await AsyncStorage.setItem('token', token);
@@ -57,6 +62,10 @@ export function AuthProvider({ children }) {
       await AsyncStorage.setItem('userRole', userData.role);
       setUser(userData);
       setRole(userData.role);
+
+      // 3. Inicializar notificaciones DESPUÉS de un login exitoso
+      await initializeNotificationService();
+
     } catch (error) {
       console.error('Error en la función de login del context:', error);
       throw error;
@@ -66,6 +75,7 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     setLoading(true);
     try {
+      // Aquí se podría añadir una llamada al backend para invalidar el push token
       setUser(null);
       setRole(null);
       await AsyncStorage.multiRemove(['token', 'user', 'userRole']);

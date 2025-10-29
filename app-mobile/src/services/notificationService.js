@@ -1,9 +1,10 @@
+
 // app-mobile/src/services/notificationService.js
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
-import { api } from '../../api/api'; // CORREGIDO: Ruta de importación
-import { router } from 'expo-router'; // 1. Importar el router
+import { api } from '../../api/api';
+import { router } from 'expo-router';
 
 // --- Configuración del manejador de notificaciones ---
 Notifications.setNotificationHandler({
@@ -25,20 +26,17 @@ export const initializeNotificationService = async () => {
       await sendTokenToBackend(token);
     }
 
-    // --- 2. Añadir listeners para gestionar las interacciones ---
-
-    // Listener para cuando se recibe una notificación MIENTRAS la app está abierta
+    // --- Listeners para gestionar las interacciones ---
     const notificationListener = Notifications.addNotificationReceivedListener(notification => {
       console.log('Notificación recibida en primer plano:', notification);
+      // Aquí se podría actualizar el estado de notificaciones no leídas
     });
 
-    // Listener para cuando el usuario TOCA la notificación
     const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
       console.log('El usuario ha interactuado con la notificación:', response);
       handleNotificationRedirection(response.notification);
     });
 
-    // Limpiar los listeners cuando el componente se desmonte (importante)
     return () => {
       Notifications.removeNotificationSubscription(notificationListener);
       Notifications.removeNotificationSubscription(responseListener);
@@ -49,24 +47,30 @@ export const initializeNotificationService = async () => {
   }
 };
 
-// --- 3. Función para manejar la redirección ---
+// --- Función para manejar la redirección ---
 const handleNotificationRedirection = (notification) => {
   const { data } = notification.request.content;
   console.log("Datos recibidos en la notificación:", data);
 
-  // Si la notificación es de un nuevo incidente, redirigir a la pantalla de detalles
-  if (data && data.type === 'new_incident' && data.incidentId) {
-    console.log(`Redirigiendo al incidente con ID: ${data.incidentId}`);
-    
-    // Usamos el router para navegar a la pantalla del incidente.
-    // Asegúrate de que la ruta /(admin)/incidents/[id] exista y esté configurada correctamente.
-    router.push(`/(admin)/incidents/${data.incidentId}`);
+  if (data) {
+    switch (data.type) {
+      case 'new_incident':
+        if (data.incidentId) {
+          console.log(`Redirigiendo al incidente con ID: ${data.incidentId}`);
+          router.push(`/(admin)/incidents`);
+        }
+        break;
+      case 'new_training':
+        console.log('Redirigiendo a la pantalla de capacitaciones');
+        router.push('/(user)/trainings');
+        break;
+      default:
+        console.log('Tipo de notificación no reconocido:', data.type);
+    }
   }
 };
 
 // --- Funciones auxiliares ---
-
-// Solicitar permisos de notificación
 const requestPermissions = async () => {
   if (!Device.isDevice) {
     console.warn('Las notificaciones push solo funcionan en dispositivos físicos.');
@@ -86,7 +90,6 @@ const requestPermissions = async () => {
     return false;
   }
 
-  // Configuración para Android
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
       name: 'default',
@@ -99,22 +102,19 @@ const requestPermissions = async () => {
   return true;
 };
 
-// Obtener el token de notificación push
 const getPushToken = async () => {
   try {
-    const token = (await Notifications.getExpoPushTokenAsync()).data;
-    return token;
+    const tokenData = await Notifications.getExpoPushTokenAsync();
+    return tokenData.data;
   } catch (error) {
     console.error("Error al obtener el token de notificación:", error);
     return null;
   }
 };
 
-// Enviar el token al backend
-const sendTokenToBackend = async (token) => {
+const sendTokenToBackend = async (fcmToken) => {
   try {
-    // Usamos la instancia de `api` para asegurar que el token de autenticación se incluya
-    await api.post('/users/save-push-token', { token });
+    await api.post('/users/update-fcm-token', { fcmToken });
     console.log('Token de notificación enviado al backend con éxito.');
   } catch (error) {
     console.error("Error al enviar el token al backend:", error.response?.data || error.message);

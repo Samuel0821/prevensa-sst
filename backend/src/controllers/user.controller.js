@@ -1,6 +1,11 @@
+
 // backend/src/controllers/user.controller.js
 const db = require("../config/db");
 const bcrypt = require("bcryptjs");
+const NotificationService = require('../services/notification.service'); // Importar el servicio
+const UserModel = require('../models/user.model'); // Importar el modelo de usuario
+
+// --- Existing functions (getAll, create, update, deleteUser) ---
 
 // ------------------------
 // 📋 Obtener todos los usuarios
@@ -90,7 +95,6 @@ exports.update = (req, res) => {
 // ------------------------
 // 🗑️ Eliminar usuario
 // ------------------------
-// Corregido: Se cambió el nombre de la función de 'delete' a 'deleteUser'
 exports.deleteUser = (req, res) => {
   try {
     const { id } = req.params;
@@ -108,21 +112,19 @@ exports.deleteUser = (req, res) => {
 };
 
 // ------------------------
-// 📲 Guardar token de notificación push
+// 📲 Guardar token de notificación push (FCM)
 // ------------------------
-exports.savePushToken = (req, res) => {
+exports.updateFCMToken = (req, res) => {
   try {
-    const { token } = req.body;
-    const userId = req.user.id; // Se obtiene del middleware de autenticación
+    const { fcmToken } = req.body; // Parámetro actualizado
+    const userId = req.user.id; 
 
-    if (!token) {
+    if (!fcmToken) {
       return res.status(400).json({ message: "El token de notificación es requerido." });
     }
 
-    // Asegurarse de que la columna fcm_token existe. Si no, hay que añadirla a la tabla.
-    // Por ahora, asumimos que sí existe.
     const stmt = db.prepare("UPDATE users SET fcm_token = ? WHERE id = ?");
-    const result = stmt.run(token, userId);
+    const result = stmt.run(fcmToken, userId); // Variable actualizada
 
     if (result.changes === 0) {
       return res.status(404).json({ message: "Usuario no encontrado, no se pudo guardar el token." });
@@ -132,10 +134,55 @@ exports.savePushToken = (req, res) => {
 
   } catch (err) {
     console.error("❌ Error al guardar el token de notificación:", err.message);
-    // Error común: la columna `fcm_token` no existe.
     if (err.message.includes("no such column: fcm_token")) {
         return res.status(500).json({ error: "Error de base de datos: La columna 'fcm_token' no existe en la tabla 'users'." });
     }
     res.status(500).json({ error: "Error interno del servidor al guardar el token." });
+  }
+};
+
+// ------------------------
+// 🎓 Asignar capacitación a un usuario
+// ------------------------
+exports.assignTraining = async (req, res) => {
+  const { id: userId } = req.params;
+  const { training_id, due_date } = req.body;
+
+  try {
+    // 1. Validar que el usuario y la capacitación existan
+    const user = UserModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado." });
+    }
+
+    const training = db.prepare("SELECT name FROM trainings WHERE id = ?").get(training_id);
+    if (!training) {
+      return res.status(404).json({ message: "Capacitación no encontrada." });
+    }
+
+    // 2. Insertar la asignación en la base de datos
+    const stmt = db.prepare(
+      "INSERT INTO user_trainings (user_id, training_id, status, due_date) VALUES (?, ?, ?, ?)"
+    );
+    stmt.run(userId, training_id, 'pendiente', due_date);
+
+    // 3. Enviar notificación push (si el usuario tiene un token)
+    if (user.fcm_token) {
+      const notificationTitle = 'Nueva Capacitación Asignada';
+      const notificationBody = `Se te ha asignado la capacitación: "${training.name}".`;
+      
+      await NotificationService.sendNotification(
+        [userId],
+        notificationTitle,
+        notificationBody,
+        { type: 'new_training' }
+      );
+    }
+
+    res.status(201).json({ message: "Capacitación asignada y notificación enviada correctamente." });
+
+  } catch (error) {
+    console.error("❌ Error al asignar la capacitación:", error);
+    res.status(500).json({ error: "Error interno del servidor al asignar la capacitación." });
   }
 };

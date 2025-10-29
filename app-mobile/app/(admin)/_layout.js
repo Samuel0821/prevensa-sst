@@ -1,9 +1,12 @@
+
 // app-mobile/app/(admin)/_layout.js
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Tabs, router } from 'expo-router';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext'; // Importar el hook de autenticación
+import NotificationIcon from '../../components/common/NotificationIcon'; // Importar el ícono de notificación
+import { NotificationProvider } from '../../src/context/NotificationContext'; // Importar el provider
 
 // Nuevo componente de cabecera
 const CustomHeader = () => {
@@ -20,14 +23,17 @@ const CustomHeader = () => {
           <Image source={require('../../assets/images/Logo_Prevensap.jpg')} style={styles.logo} />
           <Text style={styles.logoText}>PREVENSAP</Text>
       </View>
-      <View style={styles.userInfoContainer}>
-        <View style={{alignItems: 'flex-end'}}>
-            <Text style={styles.userName}>{user?.name || 'Usuario'}</Text>
-            <Text style={styles.userRole}>{user?.role || 'Rol'}</Text>
+      <View style={styles.rightHeaderContainer}>
+        <NotificationIcon />
+        <View style={styles.userInfoContainer}>
+          <View style={{alignItems: 'flex-end'}}>
+              <Text style={styles.userName}>{user?.name || 'Usuario'}</Text>
+              <Text style={styles.userRole}>{user?.role || 'Rol'}</Text>
+          </View>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -35,31 +41,33 @@ const CustomHeader = () => {
 
 export default function AdminLayout() {
   return (
-    <View style={{ flex: 1 }}>
-      <CustomHeader />
-      <Tabs screenOptions={({ route }) => ({
-        headerShown: false, // La cabecera por defecto de las pestañas se oculta
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: 'gray',
-        tabBarIcon: ({ color, size }) => {
-          let iconName;
-          if (route.name === 'dashboard') iconName = 'tachometer-alt';
-          else if (route.name === 'companies') iconName = 'building';
-          else if (route.name === 'incidents') iconName = 'exclamation-triangle';
-          else if (route.name === 'trainings') iconName = 'chalkboard-teacher';
-          else if (route.name === 'documents') iconName = 'file-alt';
-          else if (route.name === 'users') iconName = 'users';
-          return <FontAwesome5 name={iconName} size={size} color={color} />;
-        },
-      })}>
-        <Tabs.Screen name="dashboard" options={{ title: 'Panel' }} />
-        <Tabs.Screen name="companies" options={{ title: 'Empresas' }} />
-        <Tabs.Screen name="incidents" options={{ title: 'Incidentes' }} />
-        <Tabs.Screen name="trainings" options={{ title: 'Formación' }} />
-        <Tabs.Screen name="documents" options={{ title: 'Docs' }} />
-        <Tabs.Screen name="users" options={{ title: 'Usuarios' }} />
-      </Tabs>
-    </View>
+    <NotificationProvider>
+      <View style={{ flex: 1 }}>
+        <CustomHeader />
+        <Tabs screenOptions={({ route }) => ({
+          headerShown: false, // La cabecera por defecto de las pestañas se oculta
+          tabBarActiveTintColor: '#007AFF',
+          tabBarInactiveTintColor: 'gray',
+          tabBarIcon: ({ color, size }) => {
+            let iconName;
+            if (route.name === 'dashboard') iconName = 'tachometer-alt';
+            else if (route.name === 'companies') iconName = 'building';
+            else if (route.name === 'incidents') iconName = 'exclamation-triangle';
+            else if (route.name === 'trainings') iconName = 'chalkboard-teacher';
+            else if (route.name === 'documents') iconName = 'file-alt';
+            else if (route.name === 'users') iconName = 'users';
+            return <FontAwesome5 name={iconName} size={size} color={color} />;
+          },
+        })}>
+          <Tabs.Screen name="dashboard" options={{ title: 'Panel' }} />
+          <Tabs.Screen name="companies" options={{ title: 'Empresas' }} />
+          <Tabs.Screen name="incidents" options={{ title: 'Incidentes' }} />
+          <Tabs.Screen name="trainings" options={{ title: 'Formación' }} />
+          <Tabs.Screen name="documents" options={{ title: 'Docs' }} />
+          <Tabs.Screen name="users" options={{ title: 'Usuarios' }} />
+        </Tabs>
+      </View>
+    </NotificationProvider>
   );
 }
 
@@ -89,9 +97,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  rightHeaderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   userInfoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginLeft: 15,
   },
   userName: {
     color: 'white',

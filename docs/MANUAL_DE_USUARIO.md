@@ -13,23 +13,20 @@
 
 Para gestionar toda la información de la empresa (usuarios, reportes, estadísticas), utiliza la aplicación web.
 
-*   **Dirección de Acceso:** Abre el navegador Google Chrome (recomendado) en tu computadora y ve a la siguiente dirección:
-    > **[https://prevensa-sst-22953878-fc82c.web.app](https://prevensa-sst-22953878-fc82c.web.app)**
+*   **Acceso:** Abre tu navegador web (Google Chrome, Firefox, etc.) y ve a la dirección URL que te fue proporcionada.
+*   **Inicio de Sesión:** Usa el **email** y la **contraseña** que te fueron asignados.
 
-*   **Uso:** Ideal para el rol de **Administrador**. Desde aquí podrás crear usuarios, gestionar empresas, ver estadísticas y generar reportes.
+#### **1.2. Aplicación Móvil (Para Todos los Usuarios)**
 
-#### **1.2. Aplicación Móvil (Para Trabajadores en Campo)**
-
-Para reportar incidentes, consultar documentos y realizar inspecciones en terreno, utiliza la aplicación móvil.
+Para reportar incidentes o consultar información desde cualquier lugar, usa la aplicación móvil.
 
 1.  **Descarga:**
-    *   Desde el navegador de tu teléfono Android, abre este enlace para descargar el archivo de instalación:
-        > **[Descargar Prevensap APK](https://expo.dev/accounts/grisalistech/projects/Prevensap/builds/07aa4874-7271-4313-9d06-da85fa76b492)**
-    *   En la página que se abre, busca y presiona el botón **"Download"** para descargar el archivo `.apk`.
+    *   Recibirás un enlace para descargar el archivo de instalación (`.apk`).
+    *   Abre este enlace desde tu teléfono Android.
 
 2.  **Instalación:**
     *   Una vez descargado, abre el archivo.
-    *   Tu teléfono te pedirá permiso para **"Instalar desde fuentes desconocidas"**. Debes aceptar para poder continuar. Esto es seguro.
+    *   Tu teléfono te pedirá permiso para **"Instalar desde fuentes desconocidas"**. Debes aceptar para poder continuar. Esto es seguro y necesario porque la app aún no está en la Google Play Store.
     *   Sigue los pasos para completar la instalación.
 
 ---
@@ -45,38 +42,55 @@ Tanto en la web como en la app móvil, la primera pantalla que verás es la de i
 
 ### **Sección 3: Guía de Uso (Rol Administrador - App Web)**
 
-Al iniciar sesión en la **aplicación web**, tendrás acceso a todas las funcionalidades. El menú de navegación (generalmente a la izquierda o arriba) te permitirá acceder a:
+Al iniciar sesión en la **aplicación web**, tendrás acceso a todas las funcionalidades. El menú de navegación a la izquierda te permitirá acceder a:
 
-*   **Dashboard/Estadísticas:** La pantalla principal, con un resumen visual de los indicadores más importantes (incidentes, capacitaciones, etc.).
-*   **Empresas:** Aquí puedes crear, ver, editar y eliminar las empresas asociadas al sistema.
-*   **Usuarios:** Permite crear nuevas cuentas de usuario (tanto `Administradores` como `Usuarios`) y gestionar las existentes. **Es aquí donde asignas las credenciales.**
-*   **Incidentes:** Visualiza todos los incidentes reportados por los trabajadores. Puedes ver detalles, fotos y gestionar su estado.
-*   **Documentos:** Sube y gestiona documentos corporativos (como manuales de seguridad o políticas) que serán visibles para todos los usuarios en la app móvil. También puedes ver los documentos que los usuarios han subido.
-*   **Capacitaciones:** Crea y asigna capacitaciones a los trabajadores.
-*   **Inspecciones:** Revisa las listas de chequeo y las inspecciones realizadas por los usuarios desde la app móvil.
-*   **Reportes:** Genera informes en formato PDF o Excel basados en los datos del sistema.
+*   **Dashboard:** Una vista general con estadísticas y datos clave.
+*   **Companies:** Gestiona las empresas asociadas a tu cuenta.
+*   **Documents:** Sube y administra documentos importantes (políticas, manuales, etc.) para que estén disponibles para los usuarios en la app móvil.
+*   **Trainings:** Crea y asigna capacitaciones a los usuarios.
+*   **Users:** Administra los usuarios de la plataforma, crea nuevas cuentas y asigna roles.
+*   **Incidents:** El corazón de la gestión de seguridad.
+
+#### **Funcionalidad Clave: Gestión de Incidentes**
+
+Esta sección es fundamental para cumplir con tu necesidad de supervisión en tiempo real.
+
+1.  **Visualización en Tiempo Real:**
+    *   La tabla de incidentes se **actualiza automáticamente**. Si un trabajador reporta un nuevo incidente desde la app móvil, aparecerá en tu pantalla al instante, sin que tengas que recargar la página.
+    *   Lo mismo ocurre si un incidente es actualizado o eliminado.
+
+2.  **Registrar un Incidente:**
+    *   Completa el formulario en la parte superior con la descripción, fecha, ubicación y empresa.
+    *   Puedes adjuntar una fotografía como evidencia.
+    *   Haz clic en "Registrar Incidente".
+
+3.  **Generar Reportes en PDF:**
+    *   En la parte superior derecha de la pantalla de incidentes, encontrarás el botón **"Descargar Reporte (PDF)"**.
+    *   Al hacer clic, se generará un documento PDF con el listado completo de incidentes, listo para ser archivado, impreso o compartido.
 
 ---
 
-### **Sección 4: Guía de Uso (Rol Usuario - App Móvil)**
+### **Sección 4: Guía de Uso (App Móvil)**
 
-Al iniciar sesión en la **aplicación móvil**, verás una interfaz sencilla diseñada para el trabajo en campo.
+#### **4.1. Rol Administrador**
 
-#### **¿Cómo reportar un Incidente?**
-1.  Busca el botón o la sección de **"Incidentes"**.
-2.  Presiona el botón para **"Reportar"** o el ícono `+`.
-3.  Rellena el formulario con la descripción de lo ocurrido.
-4.  Usa la opción para **adjuntar una o varias fotografías** como evidencia.
-5.  Presiona **"Guardar"** o **"Enviar"**. El administrador recibirá una notificación.
+Si inicias sesión como administrador, la app móvil te permite:
 
-#### **¿Cómo subir un Documento (Ej: Check-list de vehículo)?**
-1.  Navega a la sección **"Documentos"**.
-2.  Presiona el botón para **"Añadir"** o el ícono `+`.
-3.  Rellena los campos requeridos (ej: "Check-list Pre-uso Camioneta").
-4.  Selecciona el archivo (PDF o imagen) que quieras subir.
-5.  Presiona **"Guardar"**.
+*   **Consultar Información:** Acceder a todos los módulos (incidentes, documentos, etc.).
+*   **Crear y gestionar incidentes** directamente desde el móvil, incluyendo la posibilidad de adjuntar fotos desde la cámara o galería.
+*   **Recibir Notificaciones Push:** Esta es la funcionalidad clave que **satisface tu requerimiento de alerta inmediata**.
+    *   Cuando un trabajador (o un administrador) registra un nuevo incidente, recibirás una **notificación push instantánea** en tu teléfono.
+    *   Al tocar la notificación, la aplicación se abrirá y te llevará directamente a la pantalla de incidentes para que puedas ver los detalles.
 
-#### **¿Cómo consultar información?**
-*   **Documentos:** En esta sección, podrás ver y descargar todos los manuales, procedimientos y políticas de seguridad que el administrador haya cargado en la plataforma web.
-*   **Capacitaciones:** Consulta las capacitaciones que tienes asignadas, así como sus fechas y detalles.
-*   **Inspecciones:** Accede a las listas de chequeo para realizar inspecciones de equipos, vehículos o áreas de trabajo.
+#### **4.2. Rol Usuario**
+
+Si inicias sesión como usuario, podrás:
+
+*   **Reportar Incidentes:**
+    *   Desde la pantalla de "Incidentes", puedes llenar un formulario sencillo para reportar un problema.
+    *   Puedes tomar una foto en el momento o seleccionarla de tu galería para adjuntarla como evidencia.
+*   **Consultar Información:**
+    *   **Documentos:** En esta sección, podrás ver y descargar todos los manuales, procedimientos y políticas de seguridad que el administrador haya cargado.
+    *   **Capacitaciones:** Consulta las capacitaciones que tienes asignadas, así como sus fechas y detalles.
+
+Con Prevensap, tienes el control total de la seguridad y salud en tu organización, con información centralizada en la web y la capacidad de reacción inmediata gracias a la aplicación móvil y sus notificaciones en tiempo real.
