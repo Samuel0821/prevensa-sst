@@ -1,178 +1,124 @@
 // app-mobile/app/(user)/dashboard.js
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import api from '../../api/api'; // RUTA CORREGIDA
+import api from '../../api/api'; // CORRECCIÓN: Importación por defecto
+import { FontAwesome5 } from '@expo/vector-icons';
 
-// Componente reutilizable para las tarjetas de estadísticas
-const StatCard = ({ title, value, color, icon }) => (
-  <View style={[styles.card, { borderTopColor: color }]}>
+const StatCard = ({ icon, label, value, color }) => (
+  <View style={styles.card}>
+    <FontAwesome5 name={icon} size={24} color={color} />
     <Text style={styles.cardValue}>{value}</Text>
-    <Text style={styles.cardTitle}>{title}</Text>
+    <Text style={styles.cardLabel}>{label}</Text>
   </View>
 );
 
-// Componente reutilizable para las tarjetas de progreso
-const ProgressCard = ({ title, percentage, color }) => (
-  <View style={[styles.progressCard, { backgroundColor: color }]}>
-    <Text style={styles.progressTitle}>{title}</Text>
-    <Text style={styles.progressPercentage}>{percentage}%</Text>
-  </View>
-);
-
-export default function DashboardScreen() {
-  const [stats, setStats] = useState(null);
+export default function UserDashboard() {
+  const [stats, setStats] = useState({ incidents: 0, trainings: 0, documents: 0 });
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchStats = async () => {
     try {
       const response = await api.get('/stats/dashboard');
       setStats(response.data);
     } catch (error) {
-      console.error("Error fetching dashboard stats:", error);
-      // Aquí podrías mostrar un mensaje de error al usuario
+      Alert.alert("Error", "No se pudieron cargar las estadísticas.");
     } finally {
       setLoading(false);
-      setRefreshing(false);
+      setIsRefreshing(false);
     }
   };
 
-  // useFocusEffect se ejecuta cada vez que la pantalla entra en foco
-  useFocusEffect(
-    useCallback(() => {
-      setLoading(true);
-      fetchStats();
-    }, [])
-  );
+  useFocusEffect(useCallback(() => { setLoading(true); fetchStats(); }, []));
+  const onRefresh = useCallback(() => { setIsRefreshing(true); fetchStats(); }, []);
 
-  // Función para manejar el "pull-to-refresh"
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchStats();
-  };
-
-  if (loading && !refreshing) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text>Cargando panel...</Text>
-      </View>
-    );
+  if (loading && !isRefreshing) {
+    return <View style={styles.centered}><ActivityIndicator size="large" /></View>;
   }
 
   return (
     <ScrollView 
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      contentContainerStyle={styles.container}
+      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
     >
-      <Text style={styles.header}>Panel de Control</Text>
-
-      {stats ? (
-        <View>
-          <View style={styles.cardRow}>
-            <StatCard title="Empresas" value={stats.totalCompanies} color="#007AFF" />
-            <StatCard title="Incidentes" value={stats.totalIncidents} color="#FF3B30" />
-          </View>
-          <View style={styles.cardRow}>
-            <StatCard title="Capacitaciones" value={stats.totalTrainings} color="#FF9500" />
-            <StatCard title="Documentos" value={stats.totalDocuments} color="#34C759" />
-          </View>
-          
-          <View style={styles.progressRow}>
-             <ProgressCard title="Incidentes Cerrados" percentage={stats.incidentsClosedPercentage} color="#5856D6" />
-          </View>
-          <View style={styles.progressRow}>
-            <ProgressCard title="Capacitaciones Completadas" percentage={stats.trainingsCompletedPercentage} color="#00C7BE" />
-          </View>
-        </View>
-      ) : (
-        <View style={styles.centered}>
-            <Text style={styles.errorText}>No se pudieron cargar las estadísticas. Desliza hacia abajo para reintentar.</Text>
-        </View>
-      )}
+      <Text style={styles.header}>Panel de Usuario</Text>
+      <View style={styles.statsContainer}>
+        <StatCard icon="exclamation-triangle" label="Incidentes Reportados" value={stats.incidents} color="#FF9500" />
+        <StatCard icon="chalkboard-teacher" label="Capacitaciones Asignadas" value={stats.trainings} color="#007AFF" />
+        <StatCard icon="file-alt" label="Documentos Disponibles" value={stats.documents} color="#34C759" />
+      </View>
+      <View style={styles.infoBox}>
+        <Text style={styles.infoTitle}>¡Bienvenido!</Text>
+        <Text style={styles.infoText}>
+          Aquí puedes ver un resumen de tu actividad. Reporta incidentes para mejorar la seguridad y mantente al día con tus capacitaciones.
+        </Text>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  container: { 
+    flexGrow: 1, 
     backgroundColor: '#F0F2F5',
-    padding: 10,
+    padding: 15,
   },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+  centered: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
   },
-  header: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#1C1C1E',
-    paddingVertical: 15,
-    paddingHorizontal: 10,
+  header: { 
+    fontSize: 26, 
+    fontWeight: 'bold', 
+    marginBottom: 20,
+    color: '#1C1C1E'
   },
-  cardRow: {
+  statsContainer: { 
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 10,
-  },
-   progressRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginVertical: 5,
+    marginBottom: 25,
+    flexWrap: 'wrap'
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
+    backgroundColor: 'white',
+    borderRadius: 10,
     padding: 20,
-    flex: 1,
-    marginHorizontal: 5,
     alignItems: 'center',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.20,
-    shadowRadius: 1.41,
-    elevation: 2,
-    borderTopWidth: 4,
-  },
-  cardTitle: {
-    fontSize: 14,
-    color: '#6C6C6E',
-    marginTop: 8,
-    fontWeight: '500',
+    minWidth: 150,
+    margin: 5,
+    elevation: 3, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   cardValue: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#1C1C1E',
+    marginVertical: 5,
+    color: '#1C1C1E'
   },
-  progressCard: {
-    borderRadius: 8,
-    padding: 15,
-    flex: 1,
-    marginHorizontal: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 80,
+  cardLabel: {
+    fontSize: 14,
+    color: '#6C6C6E',
+    textAlign: 'center'
   },
-  progressTitle: {
-    fontSize: 16,
-    color: '#FFFFFF',
+  infoBox: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    elevation: 2
+  },
+  infoTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
-    textAlign: 'center',
+    marginBottom: 10,
   },
-  progressPercentage: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    marginTop: 5,
-  },
-  errorText: {
-      fontSize: 16,
-      color: '#8A8A8E',
-      textAlign: 'center'
+  infoText: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: '#333'
   }
 });

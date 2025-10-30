@@ -4,12 +4,13 @@ import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Button, Alert,
   ActivityIndicator, RefreshControl, Platform
 } from 'react-native';
-import { useFocusEffect, Link } from 'expo-router'; 
+import { useFocusEffect, Link } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
-import api from '../../api/api'; // CORREGIDO: Importación por defecto
+import api from '../../api/api'; // CORRECCIÓN: Importación por defecto
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 
+// --- FORMULARIO PARA SUBIR DOCUMENTOS ---
 const DocumentForm = ({ visible, onSave, onCancel, formState, setFormState, companies, loading, pickDocument, selectedFile }) => {
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onCancel}>
@@ -62,6 +63,7 @@ export default function DocumentsScreen() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Carga los datos iniciales (documentos y empresas)
   const fetchData = async () => {
     try {
       const [docsRes, companiesRes] = await Promise.all([
@@ -71,7 +73,7 @@ export default function DocumentsScreen() {
       setDocuments(docsRes.data);
       setCompanies(companiesRes.data);
     } catch (error) {      
-      Alert.alert("Error de Conexión", `No se pudieron cargar los datos. Verifica la conexión con el servidor.`);
+      Alert.alert("Error de Conexión", `No se pudieron cargar los datos.`);
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -81,6 +83,7 @@ export default function DocumentsScreen() {
   useFocusEffect(useCallback(() => { setLoading(true); fetchData(); }, []));
   const onRefresh = useCallback(() => { setIsRefreshing(true); fetchData(); }, []);
 
+  // Abre el selector de archivos del dispositivo
   const handlePickDocument = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({ type: '*/*' });
@@ -92,6 +95,7 @@ export default function DocumentsScreen() {
     }
   };
 
+  // Lógica para guardar el nuevo documento
   const handleSave = async () => {
     if (!formState.title || !formState.company_id || !selectedFile) {
         Alert.alert("Campos incompletos", "Complete título, empresa y seleccione un archivo.");
@@ -118,12 +122,7 @@ export default function DocumentsScreen() {
     }
 
     try {
-        await api.post('/documents', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          }
-        });
-
+        await api.post('/documents', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
         Alert.alert("Éxito", "Documento subido correctamente.");
         setModalVisible(false);
         setFormState(initialFormState); 
@@ -137,35 +136,45 @@ export default function DocumentsScreen() {
     }
   };
   
-  const handleDelete = (id) => {
-    Alert.alert("Confirmar", "¿Estás seguro de eliminar este documento?", [
-      { text: "Cancelar" },
-      { text: "Eliminar", style: "destructive", onPress: async () => {
-          try {
-            await api.delete(`/documents/${id}`); // CORREGIDO: api.delete
-            Alert.alert("Éxito", "Documento eliminado.");
-            fetchData();
-          } catch (error) {
-            Alert.alert("Error", "No se pudo eliminar el documento.");
-          }
-      }}
-    ]);
+  // Lógica para eliminar un documento
+  const handleDelete = async (docId) => {
+      Alert.alert(
+          "Confirmar Eliminación",
+          "¿Estás seguro de que quieres eliminar este documento?",
+          [
+              { text: "Cancelar", style: "cancel" },
+              {
+                  text: "Eliminar",
+                  style: "destructive",
+                  onPress: async () => {
+                      try {
+                          await api.delete(`/documents/${docId}`);
+                          Alert.alert("Éxito", "Documento eliminado.");
+                          fetchData();
+                      } catch (error) {
+                          const errorMsg = error.response?.data?.error || "No se pudo eliminar.";
+                          Alert.alert("Error", errorMsg);
+                      }
+                  },
+              },
+          ]
+      );
   };
 
+  // Indicador de carga inicial
   if (loading && !isRefreshing) {
     return <View style={styles.centered}><ActivityIndicator size="large" /></View>;
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Documentos</Text>
+      <Text style={styles.header}>Documentos de Seguridad</Text>
       <FlatList
         data={documents}
         keyExtractor={(item) => item.id.toString()}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh}/>}
         renderItem={({ item }) => {
           const hasUrl = typeof item.url === 'string' && item.url;
-          // CORREGIDO: Construir la URL completa dinámicamente
           const rootUrl = api.defaults.baseURL.replace('/api', '');
           const fullUrl = hasUrl ? `${rootUrl}/uploads/${item.url}` : '';
 
@@ -191,14 +200,15 @@ export default function DocumentsScreen() {
                   )}
 
                   <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.actionButton}>
-                      <FontAwesome5 name="trash" size={18} color="#FF3B30" />
+                    <FontAwesome5 name="trash" size={18} color="#FF3B30" />
                   </TouchableOpacity>
               </View>
             </View>
           );
         }}
-        ListEmptyComponent={<Text style={styles.emptyText}>No hay documentos.</Text>}
+        ListEmptyComponent={<Text style={styles.emptyText}>No hay documentos disponibles.</Text>}
       />
+      {/* Botón para añadir un nuevo documento */}
        <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
          <FontAwesome5 name="plus" size={20} color="white" />
        </TouchableOpacity>
@@ -217,6 +227,7 @@ export default function DocumentsScreen() {
   );
 }
 
+// Estilos (unificados con la versión del usuario)
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F0F2F5' },
     centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },

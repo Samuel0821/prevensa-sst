@@ -4,22 +4,31 @@ import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Button, Alert,
   ActivityIndicator, RefreshControl, Image, Platform, ScrollView
 } from 'react-native';
-import { useFocusEffect } from 'expo-router';
-import api from '../../api/api'; // CORREGIDO: Importación por defecto
+import { useFocusEffect, Link } from 'expo-router';
+import api from '../../api/api'; // CORRECCIÓN: Importación por defecto
 import { FontAwesome5 } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
+// --- FORMULARIO DE INCIDENTE ---
 const IncidentForm = ({ visible, onSave, onCancel, incident, setIncident, companies, loading }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  // Lógica para seleccionar una imagen de la galería
   const pickImage = async () => {
+    // Solicitar permisos si es necesario (especialmente en web)
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso denegado', 'Se necesita acceso a la galería para subir fotos.');
+      return;
+    }
+
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.7,
+      quality: 0.7, // Calidad reducida para optimizar la subida
     });
 
     if (!result.canceled) {
@@ -28,7 +37,7 @@ const IncidentForm = ({ visible, onSave, onCancel, incident, setIncident, compan
   };
 
   const onChangeDate = (event, selectedDate) => {
-    setShowDatePicker(false);
+    setShowDatePicker(false); // Ocultar el picker en Android tras seleccionar
     if (event.type === 'set' && selectedDate) {
       setIncident({ ...incident, date: selectedDate });
     }
@@ -53,6 +62,7 @@ const IncidentForm = ({ visible, onSave, onCancel, incident, setIncident, compan
           onChangeText={(text) => setIncident({ ...incident, location: text })}
         />
 
+        {/* Selector de Fecha mejorado */}
         <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
             <View style={styles.datePickerContainer}>
               <Text>{incident.date.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric'})}</Text>
@@ -61,7 +71,6 @@ const IncidentForm = ({ visible, onSave, onCancel, incident, setIncident, compan
         </TouchableOpacity>
         {showDatePicker && (
             <DateTimePicker
-                testID="dateTimePicker"
                 value={incident.date}
                 mode="date"
                 display="default"
@@ -69,6 +78,7 @@ const IncidentForm = ({ visible, onSave, onCancel, incident, setIncident, compan
             />
         )}
         
+        {/* Selector de Empresa */}
         <View style={styles.input}>
             <Picker
                 selectedValue={incident.company_id}
@@ -79,12 +89,14 @@ const IncidentForm = ({ visible, onSave, onCancel, incident, setIncident, compan
             </Picker>
         </View>
 
+        {/* Botón para seleccionar imagen */}
         <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
             <FontAwesome5 name="camera" size={20} color="#555" />
             <Text style={styles.imagePickerText}>{incident.photo ? 'Cambiar Foto' : 'Añadir Foto'}</Text>
         </TouchableOpacity>
 
-        {incident.photo && <Image source={{ uri: incident.photo.uri }} style={styles.previewImage} />}
+        {/* Vista previa de la imagen seleccionada */}
+        {incident.photo?.uri && <Image source={{ uri: incident.photo.uri }} style={styles.previewImage} />}
 
         <View style={styles.buttonContainer}>
           <Button title="Guardar Incidente" onPress={onSave} disabled={loading} />
@@ -98,6 +110,7 @@ const IncidentForm = ({ visible, onSave, onCancel, incident, setIncident, compan
 
 const initialFormState = { description: '', location: '', company_id: '', photo: null, date: new Date() };
 
+// --- PANTALLA PRINCIPAL DE INCIDENTES ---
 export default function IncidentsScreen() {
   const [incidents, setIncidents] = useState([]);
   const [companies, setCompanies] = useState([]);
@@ -109,15 +122,11 @@ export default function IncidentsScreen() {
 
   const fetchData = async () => {
     try {
-      const [incidentsRes, companiesRes] = await Promise.all([
-        api.get('/incidents'),
-        api.get('/companies')
-      ]);
+      const [incidentsRes, companiesRes] = await Promise.all([ api.get('/incidents'), api.get('/companies') ]);
       setIncidents(incidentsRes.data);
       setCompanies(companiesRes.data);
     } catch (error) {
-      console.error(error);
-      Alert.alert("Error", "No se pudieron cargar los datos.");
+      Alert.alert("Error", "No se pudieron cargar los datos. Verifique la conexión.");
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -140,59 +149,55 @@ export default function IncidentsScreen() {
     formData.append('company_id', formState.company_id);
     formData.append('date', formState.date.toISOString());
 
+    // Adjuntar foto si existe
     if (formState.photo) {
-        const uri = formState.photo.uri;
-        const uriParts = uri.split('.');
-        const fileType = uriParts[uriParts.length - 1];
-        formData.append('photo', {
-            uri,
-            name: `photo.${fileType}`,
-            type: `image/${fileType}`,
-        });
+      const uri = formState.photo.uri;
+      const fileType = uri.split('.').pop();
+      const fileName = uri.split('/').pop();
+      formData.append('photo', { uri, name: fileName, type: `image/${fileType}` });
     }
 
     try {
-        await api.post('/incidents', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        Alert.alert("Éxito", "Incidente creado correctamente.");
+        await api.post('/incidents', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        Alert.alert("Éxito", "Incidente reportado correctamente.");
         setModalVisible(false);
-        setFormState(initialFormState);
-        setLoading(true);
+        setFormState(initialFormState); // Resetear formulario
         fetchData();
     } catch (error) {
-        console.error(error.response?.data || error.message);
-        Alert.alert("Error", "No se pudo crear el incidente.");
+        const errorMsg = error.response?.data?.message || "No se pudo reportar el incidente.";
+        Alert.alert("Error al Guardar", errorMsg);
     } finally {
         setIsSubmitting(false);
     }
   };
-  
+
+  const handleDelete = async (id) => {
+      Alert.alert("Confirmar Eliminación", "¿Estás seguro de que quieres eliminar este incidente?", [
+          { text: "Cancelar", style: "cancel" },
+          {
+              text: "Eliminar", style: "destructive",
+              onPress: async () => {
+                  try {
+                      await api.delete(`/incidents/${id}`);
+                      Alert.alert("Éxito", "Incidente eliminado.");
+                      fetchData();
+                  } catch (error) {
+                      Alert.alert("Error", "No se pudo eliminar el incidente.");
+                  }
+              }
+          }
+      ]);
+  };
+
   const toggleStatus = async (incident) => {
       const newStatus = incident.status === 'abierto' ? 'cerrado' : 'abierto';
       try {
           await api.put(`/incidents/${incident.id}`, { status: newStatus });
           setIncidents(prev => prev.map(i => i.id === incident.id ? {...i, status: newStatus} : i));
       } catch (error) {
-          console.error(error);
           Alert.alert("Error", "No se pudo actualizar el estado.");
       }
   }
-
-  const handleDelete = (id) => {
-    Alert.alert("Confirmar", "¿Estás seguro de eliminar este incidente?", [
-      { text: "Cancelar" },
-      { text: "Eliminar", style: "destructive", onPress: async () => {
-          try {
-            await api.delete(`/incidents/${id}`); // CORREGIDO: se usa api.delete
-            setLoading(true);
-            fetchData();
-          } catch (error) {
-            console.error(error);
-            Alert.alert("Error", "No se pudo eliminar el incidente.");
-          }
-      }}]);
-  };
 
   if (loading && !isRefreshing) {
     return <View style={styles.centered}><ActivityIndicator size="large" /></View>;
@@ -206,34 +211,40 @@ export default function IncidentsScreen() {
         keyExtractor={(item) => item.id.toString()}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh}/>}
         renderItem={({ item }) => {
-            const rootUrl = api.defaults.baseURL.replace('/api', '');
-            const photoUrl = item.photo ? `${rootUrl}/uploads/${item.photo}` : null;
-            return (
-              <View style={styles.card}>
-                {photoUrl && <Image source={{ uri: photoUrl }} style={styles.incidentImage} />}
-                <View style={styles.cardContent}>
-                    <Text style={styles.cardTitle}>{item.description}</Text>
-                    <Text><FontAwesome5 name="building"/> {item.company_name}</Text>
-                    <Text><FontAwesome5 name="map-marker-alt"/> {item.location}</Text>
-                    <Text><FontAwesome5 name="calendar-alt"/> {new Date(item.date).toLocaleDateString()}</Text>
-                    <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10}}>
-                        <TouchableOpacity onPress={() => toggleStatus(item)} style={[styles.statusBadge, { backgroundColor: item.status === 'abierto' ? '#FF9500' : '#34C759' }]}>
-                             <Text style={styles.statusText}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteButton}>
-                            <FontAwesome5 name="trash" size={18} color="#FF3B30" />
-                        </TouchableOpacity>
-                    </View>
-                </View>
+          const rootUrl = api.defaults.baseURL.replace('/api', '');
+          const photoUrl = item.photo ? `${rootUrl}/uploads/${item.photo}` : null;
+          return (
+            <View style={styles.card}>
+              {photoUrl && 
+                <Link href={photoUrl} asChild>
+                  <TouchableOpacity>
+                      <Image source={{ uri: photoUrl }} style={styles.incidentImage} />
+                      <View style={styles.photoOverlay}>
+                          <FontAwesome5 name="eye" size={20} color="white" />
+                      </View>
+                  </TouchableOpacity>
+                </Link>
+              }
+              <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle}>{item.description}</Text>
+                  <Text style={styles.cardInfo}><FontAwesome5 name="building"/> {item.company_name}</Text>
+                  <Text style={styles.cardInfo}><FontAwesome5 name="map-marker-alt"/> {item.location}</Text>
+                  <Text style={styles.cardInfo}><FontAwesome5 name="calendar-alt"/> {new Date(item.date).toLocaleDateString()}</Text>
+                  <View style={styles.cardFooter}>
+                      <TouchableOpacity onPress={() => toggleStatus(item)} style={[styles.statusBadge, { backgroundColor: item.status === 'abierto' ? '#FF9500' : '#34C759' }]}>
+                           <Text style={styles.statusText}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteButton}>
+                           <FontAwesome5 name="trash" size={16} color="#FF3B30" />
+                      </TouchableOpacity>
+                  </View>
               </View>
-            )
+            </View>
+          )
         }}
         ListEmptyComponent={<Text style={styles.emptyText}>No hay incidentes registrados.</Text>}
       />
-       <TouchableOpacity style={styles.fab} onPress={() => {
-           setFormState(initialFormState);
-           setModalVisible(true);
-        }}>
+       <TouchableOpacity style={styles.fab} onPress={() => { setFormState(initialFormState); setModalVisible(true); }}>
          <FontAwesome5 name="plus" size={20} color="white" />
        </TouchableOpacity>
       <IncidentForm visible={modalVisible} onSave={handleSave} onCancel={() => setModalVisible(false)} incident={formState} setIncident={setFormState} companies={companies} loading={isSubmitting} />
@@ -245,17 +256,20 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F0F2F5' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { fontSize: 26, fontWeight: 'bold', padding: 20, backgroundColor: 'white' },
-  card: { backgroundColor: 'white', marginVertical: 6, marginHorizontal:10, borderRadius: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 1.41, elevation: 2 },
-  cardContent: { padding: 15 },
-  cardTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 5 },
+  card: { backgroundColor: 'white', marginVertical: 8, marginHorizontal:12, borderRadius: 8, elevation: 2, shadowColor:'#000', shadowOpacity:0.1, shadowRadius:4, shadowOffset:{width:0, height:2} },
   incidentImage: { width: '100%', height: 200, borderTopLeftRadius: 8, borderTopRightRadius: 8 },
-  statusBadge: { paddingVertical: 5, paddingHorizontal: 10, borderRadius: 15 },
-  statusText: { color: 'white', fontWeight: 'bold', textTransform: 'capitalize' },
-  deleteButton: { padding: 10 },
+  photoOverlay: { position: 'absolute', top: 10, right: 10, backgroundColor: 'rgba(0,0,0,0.6)', padding: 8, borderRadius: 25 },
+  cardContent: { padding: 15 },
+  cardTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 10 },
+  cardInfo: { fontSize: 14, color: '#444', marginBottom: 5 },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 15 },
+  statusBadge: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 15 },
+  statusText: { color: 'white', fontWeight: 'bold' },
+  deleteButton: { padding: 8 },
   fab: { position: 'absolute', right: 20, bottom: 20, backgroundColor: '#007AFF', width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', elevation: 8 },
-  modalContainer: { flexGrow: 1, justifyContent: 'center', padding: 20 },
+  modalContainer: { flexGrow: 1, justifyContent: 'center', padding: 25 },
   modalTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#ddd', padding: 10, borderRadius: 8, marginBottom: 15, justifyContent: 'center' },
+  input: { borderWidth: 1, borderColor: '#ddd', padding: 12, borderRadius: 8, marginBottom: 15, backgroundColor: '#fff' },
   datePickerContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   imagePicker: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#eee', padding: 15, borderRadius: 8, justifyContent: 'center', marginBottom: 15 },
   imagePickerText: { marginLeft: 10, fontSize: 16, color: '#555' },

@@ -5,19 +5,19 @@ import {
   ActivityIndicator, RefreshControl, ScrollView, Platform
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import api from '../../api/api';
+import api from '../../api/api'; // CORRECCIÓN: Importación por defecto
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-// --- Componente Formulario (Corregido SIN descripción y CON selector de fecha) ---
+// --- FORMULARIO DE CAPACITACIÓN ---
 const TrainingForm = ({ visible, onSave, onCancel, training, setTraining, companies, loading }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const onDateChange = (event, selectedDate) => {
-    setShowDatePicker(Platform.OS === 'ios');
+    setShowDatePicker(Platform.OS === 'ios'); // En iOS, el picker no se cierra solo
     if (selectedDate) {
-      // Formatear la fecha a YYYY-MM-DD para el backend
+      // Formatear la fecha a YYYY-MM-DD para consistencia con el backend
       const formattedDate = selectedDate.toISOString().split('T')[0];
       setTraining({ ...training, date: formattedDate });
     }
@@ -26,8 +26,7 @@ const TrainingForm = ({ visible, onSave, onCancel, training, setTraining, compan
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onCancel}>
       <ScrollView contentContainerStyle={styles.modalContainer}>
-        <Text style={styles.modalTitle}>Nueva Capacitación</Text>
-        
+        <Text style={styles.modalTitle}>{training.id ? "Editar" : "Nueva"} Capacitación</Text>
         <TextInput
           placeholder="Tema de la capacitación"
           style={styles.input}
@@ -40,8 +39,7 @@ const TrainingForm = ({ visible, onSave, onCancel, training, setTraining, compan
           value={training.trainer}
           onChangeText={(text) => setTraining({ ...training, trainer: text })}
         />
-        
-        {/* Selector de fecha nativo */}
+
         <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.datePickerButton}>
             <Text style={styles.datePickerText}>{training.date || 'Seleccionar Fecha'}</Text>
             <FontAwesome5 name="calendar-alt" size={20} color="#444"/>
@@ -49,7 +47,7 @@ const TrainingForm = ({ visible, onSave, onCancel, training, setTraining, compan
 
         {showDatePicker && (
             <DateTimePicker
-                value={new Date(training.date || Date.now())}
+                value={new Date(training.date || Date.now())} // Asegurar que sea un objeto Date válido
                 mode="date"
                 display="default"
                 onChange={onDateChange}
@@ -57,9 +55,9 @@ const TrainingForm = ({ visible, onSave, onCancel, training, setTraining, compan
         )}
 
         <TextInput
-          placeholder="Número de participantes"
+          placeholder="Nº de participantes"
           style={styles.input}
-          value={String(training.participants)}
+          value={String(training.participants)} // Convertir a string para el input
           onChangeText={(text) => setTraining({ ...training, participants: text })}
           keyboardType="numeric"
         />
@@ -73,16 +71,16 @@ const TrainingForm = ({ visible, onSave, onCancel, training, setTraining, compan
             {companies.map(c => <Picker.Item key={c.id} label={c.name} value={c.id} />)}
           </Picker>
         </View>
-
+        
         <View style={styles.input}>
-          <Picker
-            selectedValue={training.status}
-            onValueChange={(itemValue) => setTraining({ ...training, status: itemValue })}
-          >
-            <Picker.Item label="Pendiente" value="Pendiente" />
-            <Picker.Item label="Completada" value="Completada" />
-            <Picker.Item label="Cancelada" value="Cancelada" />
-          </Picker>
+            <Picker
+                selectedValue={training.status}
+                onValueChange={(itemValue) => setTraining({ ...training, status: itemValue })}
+            >
+                <Picker.Item label="Pendiente" value="Pendiente" />
+                <Picker.Item label="Completada" value="Completada" />
+                <Picker.Item label="Cancelada" value="Cancelada" />
+            </Picker>
         </View>
 
         <View style={styles.buttonContainer}>
@@ -95,14 +93,13 @@ const TrainingForm = ({ visible, onSave, onCancel, training, setTraining, compan
   );
 };
 
-// ... (Resto de componentes: StatusBadge y StatusUpdateModal se mantienen igual) ...
-
 const StatusBadge = ({ status, onPress }) => {
   const statusInfo = {
     Pendiente: { color: '#FF9500', icon: 'hourglass-half' },
     Completada: { color: '#34C759', icon: 'check-circle' },
     Cancelada: { color: '#FF3B30', icon: 'times-circle' },
   };
+
   const { color, icon } = statusInfo[status] || { color: '#8E8E93', icon: 'question-circle' };
 
   return (
@@ -113,40 +110,16 @@ const StatusBadge = ({ status, onPress }) => {
   );
 };
 
-const StatusUpdateModal = ({ visible, onSave, onCancel, currentStatus, onStatusChange, loading }) => (
-  <Modal visible={visible} transparent={true} animationType="fade" onRequestClose={onCancel}>
-    <View style={styles.modalOverlay}>
-      <View style={styles.statusModalContainer}>
-        <Text style={styles.modalTitle}>Cambiar Estado</Text>
-        <Picker selectedValue={currentStatus} onValueChange={onStatusChange}>
-          <Picker.Item label="Pendiente" value="Pendiente" />
-          <Picker.Item label="Completada" value="Completada" />
-          <Picker.Item label="Cancelada" value="Cancelada" />
-        </Picker>
-        <View style={styles.buttonContainer}>
-          <Button title="Guardar" onPress={onSave} disabled={loading} />
-          <Button title="Cancelar" onPress={onCancel} color="#FF3B30" />
-        </View>
-      </View>
-    </View>
-  </Modal>
-);
-
+// --- PANTALLA DE CAPACITACIONES ---
 export default function TrainingsScreen() {
   const [trainings, setTrainings] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  
-  // Estado inicial del formulario SIN descripción
-  const initialFormState = { topic: '', trainer: '', date: '', participants: '0', company_id: null, status: 'Pendiente', description: '' };
+  const initialFormState = { id: null, topic: '', trainer: '', date: '', participants: '0', company_id: null, status: 'Pendiente', description: '' };
   const [formState, setFormState] = useState(initialFormState);
-  
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusModalVisible, setStatusModalVisible] = useState(false);
-  const [selectedTraining, setSelectedTraining] = useState(null);
-  const [newStatus, setNewStatus] = useState('');
 
   const fetchData = async () => {
     try {
@@ -154,7 +127,6 @@ export default function TrainingsScreen() {
       setTrainings(trainingsRes.data);
       setCompanies(companiesRes.data);
     } catch (error) {
-      console.error(error);
       Alert.alert("Error", "No se pudieron cargar los datos.");
     } finally {
       setLoading(false);
@@ -166,64 +138,48 @@ export default function TrainingsScreen() {
   const onRefresh = useCallback(() => { setIsRefreshing(true); fetchData(); }, []);
 
   const handleSave = async () => {
-    if (!formState.topic || !formState.date || !formState.trainer) {
-      Alert.alert("Campos incompletos", "Por favor, complete tema, capacitador y fecha.");
+    if (!formState.topic || !formState.date || !formState.trainer || !formState.company_id) {
+      Alert.alert("Campos incompletos", "Por favor, complete todos los campos requeridos.");
       return;
     }
     setIsSubmitting(true);
+    const isUpdating = !!formState.id;
+    const url = isUpdating ? `/trainings/${formState.id}` : '/trainings';
+    const method = isUpdating ? 'put' : 'post';
+
     try {
-      // El campo 'description' no se pide en el form, pero el backend lo soporta, se puede enviar vacío
-      await api.post('/trainings', { ...formState, description: formState.topic });
-      Alert.alert("Éxito", "Capacitación creada correctamente.");
+        // La descripción se puede autogenerar o dejar en blanco si no hay un campo para ella
+      const payload = { ...formState, description: formState.topic };
+      await api[method](url, payload);
+      Alert.alert("Éxito", `Capacitación ${isUpdating ? 'actualizada' : 'creada'} correctamente.`);
       setModalVisible(false);
       setFormState(initialFormState);
       fetchData();
     } catch (error) {
-      console.error(error.response?.data || error.message);
-      Alert.alert("Error", "No se pudo crear la capacitación.");
+      Alert.alert("Error", `No se pudo ${isUpdating ? 'actualizar' : 'crear'} la capacitación.`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = (id) => {
-    Alert.alert("Confirmar", "¿Estás seguro de eliminar esta capacitación?", [
+    Alert.alert("Confirmar", "¿Desea eliminar esta capacitación?", [
       { text: "Cancelar" },
       { text: "Eliminar", style: "destructive", onPress: async () => {
-          try {
-            await api.delete(`/trainings/${id}`);
-            Alert.alert("Éxito", "Capacitación eliminada.");
-            fetchData();
-          } catch (error) {
-            console.error(error);
-            Alert.alert("Error", "No se pudo eliminar la capacitación.");
-          }
+        try {
+          await api.delete(`/trainings/${id}`);
+          Alert.alert("Eliminado", "La capacitación ha sido eliminada.");
+          fetchData();
+        } catch (error) {
+          Alert.alert("Error", "No se pudo eliminar la capacitación.");
+        }
       }}
     ]);
   };
   
-  const openStatusModal = (training) => {
-    setSelectedTraining(training);
-    setNewStatus(training.status);
-    setStatusModalVisible(true);
-  };
-
-  const handleUpdateStatus = async () => {
-    if (!selectedTraining || !newStatus) return;
-    setIsSubmitting(true);
-    try {
-      const payload = { ...selectedTraining, status: newStatus };
-      await api.put(`/trainings/${payload.id}`, payload);
-      setTrainings(prev => prev.map(t => t.id === payload.id ? { ...t, status: newStatus } : t));
-      Alert.alert('Éxito', 'Estado actualizado correctamente.');
-    } catch (error) {
-      console.error(error.response?.data || error.message);
-      Alert.alert('Error', 'No se pudo actualizar el estado.');
-    } finally {
-      setIsSubmitting(false);
-      setStatusModalVisible(false);
-      setSelectedTraining(null);
-    }
+  const openModal = (training = initialFormState) => {
+    setFormState(training);
+    setModalVisible(true);
   };
 
   if (loading && !isRefreshing) {
@@ -240,26 +196,28 @@ export default function TrainingsScreen() {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>{item.topic}</Text>
-              <StatusBadge status={item.status} onPress={() => openStatusModal(item)} />
+                <Text style={styles.cardTitle}>{item.topic}</Text>
+                <StatusBadge status={item.status} onPress={() => openModal(item)} />
             </View>
-            {/* La descripción se sigue mostrando en la lista si existe */}
-            <Text style={styles.cardDescription}>{item.description || "Sin descripción"}</Text>
-            <View style={styles.separator} />
+            <Text style={styles.cardDescription}>{item.description || "Esta capacitación no tiene una descripción detallada."}</Text>
+            <View style={styles.separator}/>
             <Text style={styles.cardInfo}><FontAwesome5 name="building"/> {item.company_name || 'N/A'}</Text>
             <Text style={styles.cardInfo}><FontAwesome5 name="chalkboard-teacher"/> {item.trainer}</Text>
-            {/* --- SOLUCIÓN APLICADA --- */}
-            {/* Se corrigió el error tipográfico de toLocaleDate-String a toLocaleDateString */}
             <Text style={styles.cardInfo}><FontAwesome5 name="calendar-alt"/> {new Date(item.date).toLocaleDateString()}</Text>
             <Text style={styles.cardInfo}><FontAwesome5 name="users"/> {item.participants} Asistentes</Text>
-            <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteButton}>
-              <FontAwesome5 name="trash" size={18} color="#FF3B30" />
-            </TouchableOpacity>
+            <View style={styles.cardActions}>
+              <TouchableOpacity style={styles.actionButton} onPress={() => openModal(item)}>
+                <FontAwesome5 name="edit" size={16} color="#007AFF" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionButton} onPress={() => handleDelete(item.id)}>
+                <FontAwesome5 name="trash" size={16} color="#FF3B30" />
+              </TouchableOpacity>
+            </View>
           </View>
         )}
         ListEmptyComponent={<Text style={styles.emptyText}>No hay capacitaciones programadas.</Text>}
       />
-      <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
+      <TouchableOpacity style={styles.fab} onPress={() => openModal()}>
         <FontAwesome5 name="plus" size={20} color="white" />
       </TouchableOpacity>
       <TrainingForm 
@@ -271,16 +229,6 @@ export default function TrainingsScreen() {
         companies={companies} 
         loading={isSubmitting} 
       />
-      {selectedTraining && (
-        <StatusUpdateModal
-          visible={statusModalVisible}
-          onCancel={() => setStatusModalVisible(false)}
-          onSave={handleUpdateStatus}
-          onStatusChange={setNewStatus}
-          currentStatus={newStatus}
-          loading={isSubmitting}
-        />
-      )}
     </View>
   );
 }
@@ -289,13 +237,14 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F0F2F5' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { fontSize: 26, fontWeight: 'bold', padding: 20, backgroundColor: 'white' },
-  card: { backgroundColor: 'white', marginVertical: 8, marginHorizontal: 12, borderRadius: 8, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.22, shadowRadius: 2.22, paddingBottom: 40 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 15, paddingTop: 15, paddingBottom: 5 },
+  card: { backgroundColor: 'white', marginVertical: 8, marginHorizontal: 12, borderRadius: 8, elevation: 3, paddingVertical: 15 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 15, paddingBottom: 5 },
   cardTitle: { fontSize: 18, fontWeight: 'bold', flex: 1, marginRight: 10 },
-  cardDescription: { fontSize: 14, color: '#666', paddingHorizontal: 15, paddingBottom: 10 },
+  cardDescription: { fontSize: 14, color: '#666', paddingHorizontal: 15, paddingTop: 5, paddingBottom: 10 },
   separator: { height: 1, backgroundColor: '#eee', marginHorizontal: 15, marginBottom: 10 },
-  cardInfo: { fontSize: 14, color: '#333', paddingHorizontal: 15, marginBottom: 6, flexDirection:'row', alignItems:'center' },
-  deleteButton: { position: 'absolute', bottom: 15, right: 15 },
+  cardInfo: { fontSize: 14, color: '#333', paddingHorizontal: 15, marginBottom: 6 },
+  cardActions: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 10, paddingTop: 10 },
+  actionButton: { paddingHorizontal: 10 },
   fab: { position: 'absolute', right: 20, bottom: 20, backgroundColor: '#007AFF', width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', elevation: 8 },
   modalContainer: { justifyContent: 'center', padding: 30, backgroundColor: '#F0F2F5', flexGrow: 1 },
   modalTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
@@ -304,8 +253,6 @@ const styles = StyleSheet.create({
   emptyText: { textAlign: 'center', marginTop: 50, color: 'gray', fontSize: 16 },
   statusBadge: { flexDirection: 'row', alignItems: 'center', paddingVertical: 5, paddingHorizontal: 10, borderRadius: 15 },
   statusBadgeText: { color: 'white', fontWeight: 'bold', marginLeft: 5 },
-  modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
-  statusModalContainer: { width: '80%', backgroundColor: 'white', borderRadius: 10, padding: 20, elevation: 10 },
   datePickerButton: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: '#ddd', padding: 12, borderRadius: 8, marginBottom: 15, backgroundColor: '#fff' },
   datePickerText: { fontSize: 16, color: '#333' }
 });

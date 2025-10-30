@@ -22,10 +22,10 @@ export const NotificationProvider = ({ children }) => {
       // Aquí puedes agregar navegación a la pantalla de notificaciones si lo deseas
     });
 
-    // Limpiar listeners al desmontar
+    // Limpiar listeners al desmontar de la forma correcta
     return () => {
-      Notifications.removeNotificationSubscription(notificationListener);
-      Notifications.removeNotificationSubscription(responseListener);
+      notificationListener.remove();
+      responseListener.remove();
     };
   }, []);
 

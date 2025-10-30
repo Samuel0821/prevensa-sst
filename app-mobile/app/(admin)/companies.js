@@ -2,7 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Button, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import api from '../../api/api'; // CORREGIDO: Importación por defecto
+import api from '../../api/api'; // CORRECCIÓN: Importación por defecto
 import { FontAwesome5 } from '@expo/vector-icons';
 
 const initialState = { id: null, name: '', nit: '', address: '', phone: '' };
@@ -76,7 +76,7 @@ export default function CompaniesScreen() {
 
   const performDelete = async (id) => {
     try {
-      await api.delete(`/companies/${id}`); // CORREGIDO: se usa api.delete
+      await api.delete(`/companies/${id}`);
       Alert.alert("Éxito", "Empresa eliminada correctamente.");
       fetchCompanies(); // Recargar la lista
     } catch (error) {
