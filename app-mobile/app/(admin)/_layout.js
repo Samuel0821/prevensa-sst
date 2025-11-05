@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   },
   logoText: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 8,
     fontWeight: 'bold',
   },
   rightHeaderContainer: {
@@ -104,12 +104,12 @@ const styles = StyleSheet.create({
   userInfoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 15,
+    marginLeft: 0,
   },
   userName: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 12,
   },
   userRole: {
     color: '#E0E0E0', // Un gris claro para el rol
@@ -118,10 +118,10 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     backgroundColor: 'white',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginLeft: 15,
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginLeft: 8,
   },
   logoutButtonText: {
     color: '#0052cc',
