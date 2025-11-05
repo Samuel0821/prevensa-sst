@@ -55,7 +55,7 @@ export default function AdminLayout() {
             else if (route.name === 'incidents') iconName = 'exclamation-triangle';
             else if (route.name === 'trainings') iconName = 'chalkboard-teacher';
             else if (route.name === 'documents') iconName = 'file-alt';
-            else if (route.name === 'users') iconName = 'users';
+            else if (route.name === 'user') iconName = 'users'; // CORREGIDO
             return <FontAwesome5 name={iconName} size={size} color={color} />;
           },
         })}>
@@ -64,7 +64,7 @@ export default function AdminLayout() {
           <Tabs.Screen name="incidents" options={{ title: 'Incidentes' }} />
           <Tabs.Screen name="trainings" options={{ title: 'Formación' }} />
           <Tabs.Screen name="documents" options={{ title: 'Docs' }} />
-          <Tabs.Screen name="users" options={{ title: 'Usuarios' }} />
+          <Tabs.Screen name="user" options={{ title: 'Usuarios' }} />
         </Tabs>
       </View>
     </NotificationProvider>

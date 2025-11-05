@@ -1,124 +1,199 @@
+
 // app-mobile/app/(user)/dashboard.js
-import React, { useState, useCallback } from 'react';
+// ESTE ARCHIVO ES UN ESPEJO DEL DASHBOARD DEL ADMINISTRADOR
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import api from '../../api/api'; // CORRECCIÓN: Importación por defecto
+import api from '../../api/api';
 import { FontAwesome5 } from '@expo/vector-icons';
 
-const StatCard = ({ icon, label, value, color }) => (
-  <View style={styles.card}>
-    <FontAwesome5 name={icon} size={24} color={color} />
+const StatCard = ({ title, value, icon, color }) => (
+  <View style={[styles.card, { borderTopColor: color }]}>
+    <FontAwesome5 name={icon} size={24} color={color} style={styles.cardIcon} />
     <Text style={styles.cardValue}>{value}</Text>
-    <Text style={styles.cardLabel}>{label}</Text>
+    <Text style={styles.cardTitle}>{title}</Text>
   </View>
 );
 
-export default function UserDashboard() {
-  const [stats, setStats] = useState({ incidents: 0, trainings: 0, documents: 0 });
+const ProgressCard = ({ title, percentage, color }) => (
+    <View style={styles.progressCardContainer}>
+        <Text style={styles.progressTitle}>{title}</Text>
+        <View style={styles.progressBarBackground}>
+            <View style={[styles.progressBarFill, { width: `${percentage}%`, backgroundColor: color }]} />
+        </View>
+        <Text style={styles.progressPercentage}>{percentage}%</Text>
+    </View>
+);
+
+export default function DashboardScreen() {
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchStats = async () => {
     try {
       const response = await api.get('/stats/dashboard');
       setStats(response.data);
     } catch (error) {
-      Alert.alert("Error", "No se pudieron cargar las estadísticas.");
+      console.error("Error fetching dashboard stats:", error);
+      Alert.alert("Error de Carga", "No se pudieron obtener las estadísticas. Por favor, intenta de nuevo.");
     } finally {
       setLoading(false);
-      setIsRefreshing(false);
+      setRefreshing(false);
     }
   };
 
-  useFocusEffect(useCallback(() => { setLoading(true); fetchStats(); }, []));
-  const onRefresh = useCallback(() => { setIsRefreshing(true); fetchStats(); }, []);
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      fetchStats();
+    }, [])
+  );
 
-  if (loading && !isRefreshing) {
-    return <View style={styles.centered}><ActivityIndicator size="large" /></View>;
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchStats();
+  }, []);
+
+  if (loading && !refreshing) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text>Cargando panel...</Text>
+      </View>
+    );
   }
 
   return (
     <ScrollView 
-      contentContainerStyle={styles.container}
-      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+      style={styles.container}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#007AFF"]}/>}
     >
-      <Text style={styles.header}>Panel de Usuario</Text>
-      <View style={styles.statsContainer}>
-        <StatCard icon="exclamation-triangle" label="Incidentes Reportados" value={stats.incidents} color="#FF9500" />
-        <StatCard icon="chalkboard-teacher" label="Capacitaciones Asignadas" value={stats.trainings} color="#007AFF" />
-        <StatCard icon="file-alt" label="Documentos Disponibles" value={stats.documents} color="#34C759" />
-      </View>
-      <View style={styles.infoBox}>
-        <Text style={styles.infoTitle}>¡Bienvenido!</Text>
-        <Text style={styles.infoText}>
-          Aquí puedes ver un resumen de tu actividad. Reporta incidentes para mejorar la seguridad y mantente al día con tus capacitaciones.
-        </Text>
-      </View>
+      {/* Título ajustado para ser neutral */}
+      <Text style={styles.header}>Panel de Control</Text>
+      {stats ? (
+        <View>
+          <View style={styles.cardRow}>
+            <StatCard title="Empresas" value={stats.totalCompanies} icon="building" color="#007AFF" />
+            <StatCard title="Usuarios" value={stats.totalUsers} icon="users" color="#34C759" />
+          </View>
+          <View style={styles.cardRow}>
+            <StatCard title="Documentos" value={stats.totalDocuments} icon="file-alt" color="#16A34A" /> 
+            <StatCard title="Incidentes" value={stats.totalIncidents} icon="exclamation-triangle" color="#FF3B30" />
+          </View>
+          <View style={styles.cardRow}>
+            <StatCard title="Capacitaciones" value={stats.totalTrainings} icon="chalkboard-teacher" color="#FF9500" />
+          </View>
+          
+          <View style={styles.progressSection}>
+            <ProgressCard title="Incidentes Cerrados" percentage={stats.incidentsClosedPercentage} color="#5856D6" />
+            <ProgressCard title="Capacitaciones Completadas" percentage={stats.trainingsCompletedPercentage} color="#00C7BE" />
+          </View>
+
+        </View>
+      ) : (
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>No se pudieron cargar las estadísticas. Desliza hacia abajo para reintentar.</Text>
+        </View>
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flexGrow: 1, 
+  container: {
+    flex: 1,
     backgroundColor: '#F0F2F5',
-    padding: 15,
+    paddingHorizontal: 10,
   },
-  centered: { 
-    flex: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center' 
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
-  header: { 
-    fontSize: 26, 
-    fontWeight: 'bold', 
-    marginBottom: 20,
-    color: '#1C1C1E'
+  header: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+    paddingVertical: 20,
+    paddingHorizontal: 10,
   },
-  statsContainer: { 
+  cardRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 25,
-    flexWrap: 'wrap'
+    marginBottom: 15,
   },
   card: {
-    backgroundColor: 'white',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
-    padding: 20,
+    padding: 15,
+    flex: 1,
+    marginHorizontal: 8,
     alignItems: 'center',
-    minWidth: 150,
-    margin: 5,
-    elevation: 3, 
-    shadowColor: '#000', 
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 3.84,
+    elevation: 5,
+    borderTopWidth: 5,
+  },
+  cardIcon: {
+      marginBottom: 10,
   },
   cardValue: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: 'bold',
-    marginVertical: 5,
-    color: '#1C1C1E'
+    color: '#1C1C1E',
   },
-  cardLabel: {
+  cardTitle: {
     fontSize: 14,
     color: '#6C6C6E',
-    textAlign: 'center'
+    marginTop: 5,
+    fontWeight: '500',
   },
-  infoBox: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
-    elevation: 2
+  progressSection: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 10,
+      padding: 20,
+      marginHorizontal: 8,
+      marginTop: 10,
+      marginBottom: 20,
+      elevation: 4,
+      shadowColor: '#000',
+      shadowOpacity: 0.08,
+      shadowRadius: 10
   },
-  infoTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
+  progressCardContainer: {
+      marginVertical: 12,
   },
-  infoText: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#333'
+  progressTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#3C3C43',
+      marginBottom: 8,
+  },
+  progressBarBackground: {
+      height: 12,
+      backgroundColor: '#E5E5EA',
+      borderRadius: 6,
+      overflow: 'hidden',
+  },
+  progressBarFill: {
+      height: '100%',
+      borderRadius: 6,
+  },
+  progressPercentage: {
+      textAlign: 'right',
+      fontSize: 14,
+      fontWeight: '700',
+      color: '#6C6C6E',
+      marginTop: 4
+  },
+  errorText: {
+      fontSize: 16,
+      color: '#8A8A8E',
+      textAlign: 'center'
   }
 });

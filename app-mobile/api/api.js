@@ -25,15 +25,24 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Interceptor para manejar errores de autenticación (401)
+// --- INTERCEPTOR DE RESPUESTAS CORREGIDO ---
+// Maneja errores 401, PERO ignora los que provienen de la ruta de login
+// para permitir que la pantalla de login muestre su propio mensaje de error.
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
-      console.warn('⚠️ Token expirado o no autorizado en app móvil.');
+    const originalRequest = error.config;
+
+    // Si el error es 401 y NO es de la ruta de login, es un token inválido/expirado.
+    if (error.response?.status === 401 && !originalRequest.url.endsWith('/auth/login')) {
+      console.warn('⚠️ Token expirado o no autorizado. Limpiando sesión...');
+      // Eliminar el token y los datos del usuario para forzar un nuevo login.
       await AsyncStorage.multiRemove(['token', 'user']);
-      // En una app real, aquí se gestionaría la redirección a la pantalla de Login.
+      // En una app más compleja, aquí se podría redirigir al usuario a la pantalla de login.
     }
+
+    // Para todos los demás errores (incluido el 401 del login), simplemente se rechaza
+    // la promesa para que el código que hizo la llamada (ej. la función de login) lo maneje.
     return Promise.reject(error);
   }
 );

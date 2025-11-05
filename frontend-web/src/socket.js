@@ -2,9 +2,8 @@
 // frontend-web/src/socket.js
 import { io } from "socket.io-client";
 
-// La URL de tu backend. Asegúrate de que esta sea la correcta para tu entorno.
-// En desarrollo, probablemente será http://localhost:4000
-const URL = "http://localhost:4000";
+// La URL de tu backend. Cambiada para apuntar al servidor de producción.
+const URL = "https://prevensap-backend.onrender.com";
 
 const socket = io(URL, {
   autoConnect: false, // La conexión no se iniciará automáticamente

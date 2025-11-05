@@ -1,6 +1,7 @@
+
 // frontend-web/src/context/AuthContext.jsx
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import api from '../services/api'; // CORREGIDO: Importar la instancia correcta de Axios
+import api from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -9,24 +10,42 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // --- CORRECCIÓN DEFINITIVA: RESTAURACIÓN DE SESIÓN ---
+  // Este efecto ahora restaura TODA la sesión del usuario desde el localStorage,
+  // no solo el hecho de que está autenticado.
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      // Aquí podrías agregar una lógica para verificar el token en el backend
-      // y obtener los datos del usuario.
-      // Por ahora, si hay un token, asumimos que está autenticado.
-      // En una implementación real, decodificarías el token o harías una llamada a /api/auth/profile
-      setIsAuthenticated(true);
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+
+      if (token && storedUser) {
+        // Se restaura el objeto de usuario, lo que permite que otros contextos
+        // que dependen de 'user' funcionen correctamente.
+        setUser(JSON.parse(storedUser));
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      // Si hay un error (ej. JSON malformado), se limpia todo.
+      console.error("Error al restaurar la sesión:", error);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const login = async (email, password) => {
     try {
-      // AJUSTE: Usar la instancia 'api' que ya tiene la URL base de producción
       const response = await api.post('/auth/login', { email, password });
       const { token, user: userData } = response.data;
+      
+      // Se guarda tanto el token como el objeto de usuario en localStorage.
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(userData)); // Guardar como string
+      
       setUser(userData);
       setIsAuthenticated(true);
       return true;
@@ -38,9 +57,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    // Se limpia el almacenamiento local completo de la sesión.
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setUser(null);
     setIsAuthenticated(false);
+    // Redirigir a login para asegurar un estado limpio.
+    if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+    }
   };
 
   return (

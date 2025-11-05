@@ -1,5 +1,8 @@
-//frontend-web/src/App.jsx
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+
+// frontend-web/src/App.jsx
+import { Routes, Route, Navigate, useLocation, BrowserRouter as Router } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { IncidentProvider } from "./context/IncidentContext";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 
@@ -12,13 +15,21 @@ import Companies from "./pages/Companies";
 import Login from "./pages/Login";
 
 function PrivateRoute({ children }) {
-  const token = localStorage.getItem("token");
+  const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
-  if (!token) return <Navigate to="/login" state={{ from: location }} replace />;
+
+  if (loading) {
+    return null; 
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
   return children;
 }
 
-export default function App() {
+function AppLayout() {
   const location = useLocation();
   const isLoginPage = location.pathname === "/login";
 
@@ -42,5 +53,19 @@ export default function App() {
         </main>
       </div>
     </div>
+  );
+}
+
+// --- CORRECCIÓN FINAL DE ARQUITECTURA ---
+// Se elimina el <Router> duplicado de este archivo.
+// El <BrowserRouter> principal ya está en `main.jsx`, que es la práctica estándar.
+// Esto asegura un único contexto de navegación y estado para toda la app.
+export default function App() {
+  return (
+    <AuthProvider>
+      <IncidentProvider>
+        <AppLayout />
+      </IncidentProvider>
+    </AuthProvider>
   );
 }

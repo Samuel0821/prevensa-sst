@@ -1,8 +1,9 @@
+
 // app-mobile/app/(admin)/dashboard.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import api from '../../api/api'; // CORRECCIÓN: Importación por defecto
+import api from '../../api/api';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 const StatCard = ({ title, value, icon, color }) => (
@@ -75,7 +76,11 @@ export default function DashboardScreen() {
             <StatCard title="Usuarios" value={stats.totalUsers} icon="users" color="#34C759" />
           </View>
           <View style={styles.cardRow}>
+            {/* CORREGIDO: Añadido el contador de documentos */}
+            <StatCard title="Documentos" value={stats.totalDocuments} icon="file-alt" color="#16A34A" /> 
             <StatCard title="Incidentes" value={stats.totalIncidents} icon="exclamation-triangle" color="#FF3B30" />
+          </View>
+          <View style={styles.cardRow}>
             <StatCard title="Capacitaciones" value={stats.totalTrainings} icon="chalkboard-teacher" color="#FF9500" />
           </View>
           

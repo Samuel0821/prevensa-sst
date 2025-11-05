@@ -1,10 +1,8 @@
 
 // app-mobile/app/index.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import api from '../api/api';
+import { View, Text, TextInput, StyleSheet, Alert, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
+import { useAuth } from '../src/context/AuthContext'; // Importar el hook useAuth
 import { FontAwesome5 } from '@expo/vector-icons';
 
 export default function LoginScreen() {
@@ -12,7 +10,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const router = useRouter();
+  const { login } = useAuth(); // Usar el contexto de autenticación
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -22,22 +20,18 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      const response = await api.post('/auth/login', { email, password });
-      const { token, user } = response.data;
+      // La lógica de API y AsyncStorage ahora está en el AuthContext
+      const { success, message } = await login(email, password);
 
-      // Corregido: Usar la clave 'token' para ser consistente
-      await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('userData', JSON.stringify(user));
-      
-      if (user.role === 'admin') {
-        router.replace('/(admin)/dashboard');
-      } else {
-        router.replace('/(user)');
+      // SI EL LOGIN FALLA, mostramos el mensaje de error.
+      // SI EL LOGIN ES EXITOSO, no hacemos nada aquí.
+      // El componente _layout.js se encargará automáticamente de la redirección.
+      if (!success) {
+        Alert.alert('Error de autenticación', message);
       }
-
+      
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Error al iniciar sesión. Verifica tus credenciales.';
-      Alert.alert('Error de autenticación', errorMessage);
+      Alert.alert('Error inesperado', 'Ocurrió un error durante el inicio de sesión.');
     } finally {
       setLoading(false);
     }

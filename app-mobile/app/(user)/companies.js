@@ -1,17 +1,17 @@
+
 // app-mobile/app/(user)/companies.js
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import api from '../../api/api'; // CORRECCIÓN: Importación por defecto
+import api from '../../api/api';
 import { FontAwesome5 } from '@expo/vector-icons';
 
-// --- PANTALLA DE EMPRESAS PARA USUARIO (SOLO LECTURA) ---
-export default function CompaniesScreen() {
+export default function UserCompaniesScreen() {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Carga las empresas desde la API
+  // Carga todas las empresas desde el backend
   const fetchCompanies = async () => {
     try {
       const response = await api.get('/companies');
@@ -24,64 +24,105 @@ export default function CompaniesScreen() {
     }
   };
 
-  // Hooks para cargar y refrescar datos
-  useFocusEffect(useCallback(() => { setLoading(true); fetchCompanies(); }, []));
-  const onRefresh = useCallback(() => { setIsRefreshing(true); fetchCompanies(); }, []);
+  // Carga los datos cuando la pantalla se enfoca
+  useFocusEffect(useCallback(() => { 
+    setLoading(true);
+    fetchCompanies(); 
+  }, []));
 
-  // Indicador de carga inicial
+  // Lógica para el "pull-to-refresh"
+  const onRefresh = useCallback(() => { 
+    setIsRefreshing(true);
+    fetchCompanies(); 
+  }, []);
+
   if (loading && !isRefreshing) {
-    return <View style={styles.centered}><ActivityIndicator size="large" /></View>;
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#007AFF"/>
+        <Text>Cargando empresas...</Text>
+      </View>
+    );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Empresas Asociadas</Text>
+      <Text style={styles.header}>Empresas Registradas</Text>
       <FlatList
         data={companies}
         keyExtractor={(item) => item.id.toString()}
-        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh}/>}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={["#007AFF"]}/>}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <FontAwesome5 name="building" size={24} color="#007AFF" style={styles.icon} />
+            <FontAwesome5 name="building" size={24} color="#007AFF" style={styles.icon}/>
             <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>{item.name}</Text>
-              <Text style={styles.cardSubtitle}>NIT: {item.nit}</Text>
-              <Text style={styles.cardInfo}>{item.address}</Text>
-              <Text style={styles.cardInfo}>{item.phone}</Text>
+                <Text style={styles.cardTitle}>{item.name}</Text>
+                <Text style={styles.cardInfo}>NIT: {item.nit}</Text>
+                <Text style={styles.cardInfo}><FontAwesome5 name="map-marker-alt"/> {item.address}</Text>
+                <Text style={styles.cardInfo}><FontAwesome5 name="phone"/> {item.phone}</Text>
             </View>
           </View>
         )}
-        ListEmptyComponent={<Text style={styles.emptyText}>No hay empresas disponibles.</Text>}
+        ListEmptyComponent={<View style={styles.centered}><Text style={styles.emptyText}>No hay empresas registradas.</Text></View>}
       />
     </View>
   );
 }
 
-// --- ESTILOS UNIFICADOS ---
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F0F2F5' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { fontSize: 26, fontWeight: 'bold', padding: 20, backgroundColor: 'white' },
+  container: { 
+    flex: 1, 
+    backgroundColor: '#F0F2F5' 
+  },
+  centered: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    padding: 20
+  },
+  header: { 
+    fontSize: 26, 
+    fontWeight: 'bold', 
+    padding: 20, 
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd' 
+  },
   card: { 
     backgroundColor: 'white', 
     marginVertical: 8, 
-    marginHorizontal: 16, 
-    borderRadius: 8, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+    marginHorizontal: 12, 
+    borderRadius: 10, 
     padding: 15,
-    elevation: 2, // Sombra para Android
-    shadowColor: '#000', // Sombra para iOS
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.20,
-    shadowRadius: 1.41,
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   icon: {
-    marginRight: 15,
+      marginRight: 15,
+      width: 30,
+      textAlign: 'center',
   },
-  cardContent: { flex: 1 },
-  cardTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 2 },
-  cardSubtitle: { fontSize: 14, color: 'gray', marginBottom: 5 },
-  cardInfo: { fontSize: 14, color: '#333' },
-  emptyText: { textAlign: 'center', marginTop: 50, color: 'gray', fontSize: 16 },
+  cardContent: {
+      flex: 1,
+  },
+  cardTitle: { 
+    fontSize: 18, 
+    fontWeight: 'bold',
+    color: '#333'
+  },
+  cardInfo: { 
+    fontSize: 14, 
+    color: '#555',
+    marginTop: 5
+  },
+  emptyText: { 
+    textAlign: 'center', 
+    color: 'gray', 
+    fontSize: 16 
+  },
 });

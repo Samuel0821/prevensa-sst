@@ -1,32 +1,36 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api } from '../../api/api';
+// CORREGIDO: La ruta a la API es de dos niveles hacia arriba.
+import api from '../../api/api'; 
 
 const AuthContext = createContext(null);
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [isLoading, setIsLoading] = useState(true); // CORREGIDO: Renombrado de 'loading' a 'isLoading'
+  const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     const loadStorageData = async () => {
       try {
         const storedToken = await AsyncStorage.getItem('token');
-        const storedUser = await AsyncStorage.getItem('user');
+        const storedUser = await AsyncStorage.getItem('user'); 
         const storedRole = await AsyncStorage.getItem('userRole');
 
         if (storedToken && storedUser) {
+          // Primero, configurar el header de la API para las siguientes peticiones.
+          api.defaults.headers.Authorization = `Bearer ${storedToken}`;
+          // Luego, actualizar el estado de la aplicación.
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
           setUserRole(storedRole);
-          api.defaults.headers.Authorization = `Bearer ${storedToken}`;
         }
       } catch (error) {
         console.error("Error cargando datos de AsyncStorage", error);
       } finally {
-        setIsLoading(false); // CORREGIDO: Usar el setter correcto
+        setIsLoading(false);
       }
     };
 
@@ -38,17 +42,19 @@ const AuthProvider = ({ children }) => {
       const response = await api.post('/auth/login', { email, password });
       const { token, user } = response.data;
 
+      // Primero, configurar el header para las futuras peticiones de esta sesión.
+      api.defaults.headers.Authorization = `Bearer ${token}`;
+      // Luego, guardar los datos en el almacenamiento para persistir la sesión.
       await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('user', JSON.stringify(user));
+      await AsyncStorage.setItem('user', JSON.stringify(user)); 
       await AsyncStorage.setItem('userRole', user.role);
 
+      // Finalmente, actualizar el estado global de la aplicación.
       setToken(token);
       setUser(user);
       setUserRole(user.role);
-
-      api.defaults.headers.Authorization = `Bearer ${token}`;
       
-      return { success: true };
+      return { success: true, user };
     } catch (error) {
       console.error("Error en el login:", error.response?.data?.message || error.message);
       return { success: false, message: error.response?.data?.message || 'Error de red' };
@@ -57,11 +63,14 @@ const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
+      // Limpiar el header de autorización.
+      delete api.defaults.headers.Authorization;
+      // Eliminar los datos de la sesión del almacenamiento.
       await AsyncStorage.multiRemove(['token', 'user', 'userRole']);
+      // Resetear el estado de la aplicación.
       setUser(null);
       setToken(null);
       setUserRole(null);
-      delete api.defaults.headers.Authorization;
     } catch (error) {
       console.error("Error en el logout", error);
     }
@@ -74,7 +83,6 @@ const AuthProvider = ({ children }) => {
   );
 };
 
-// CORREGIDO: El hook 'useAuth' que faltaba por completo
 const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -83,5 +91,4 @@ const useAuth = () => {
   return context;
 };
 
-// CORREGIDO: Exportar el Provider y el hook para que puedan ser importados
-export { AuthProvider, useAuth };
+export { AuthProvider, useAuth, AuthContext };

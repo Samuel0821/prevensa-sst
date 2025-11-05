@@ -1,7 +1,7 @@
 
 // frontend-web/src/context/IncidentContext.jsx
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import api from '../services/api';
+import api from '../services/api'; // Ya se importa la instancia correcta
 import socket from '../socket';
 import { useAuth } from './AuthContext';
 
@@ -18,34 +18,38 @@ export function IncidentProvider({ children }) {
 
   useEffect(() => {
     if (user) {
-      socket.connect();
+      // --- CORRECCIÓN #2: AUTENTICACIÓN DEL WEBSOCKET ---
+      // Se añade el token a la configuración del socket antes de conectar.
+      const token = localStorage.getItem('token');
+      if (token) {
+        socket.auth = { token };
+        socket.connect();
+      }
 
-      // Carga inicial
+      // --- CORRECCIÓN #1: CARGA INICIAL CON API AUTENTICADA ---
+      // Se utiliza la instancia 'api' que ya tiene el interceptor del token.
       api.get('/incidents')
         .then(response => {
           setIncidents(response.data);
-          setLoading(false);
         })
         .catch(error => {
+          // Ahora los errores de autenticación serán manejados por el interceptor de api.js
           console.error("Error al cargar los incidentes:", error);
+        })
+        .finally(() => {
           setLoading(false);
         });
 
-      // --- LISTENERS DE WEBSOCKET ---
-
-      // 1. Alguien crea un nuevo incidente
       const handleNewIncident = (newIncident) => {
         console.log("Socket IN: new_incident", newIncident);
         setIncidents(prev => [newIncident, ...prev]);
       };
 
-      // 2. Alguien elimina un incidente
       const handleIncidentDeleted = ({ id }) => {
         console.log(`Socket IN: incident_deleted (ID: ${id})`);
         setIncidents(prev => prev.filter(incident => incident.id !== id));
       };
 
-      // 3. Alguien actualiza un incidente
       const handleIncidentUpdated = (updatedIncident) => {
         console.log("Socket IN: incident_updated", updatedIncident);
         setIncidents(prev => 
@@ -55,12 +59,10 @@ export function IncidentProvider({ children }) {
         );
       };
 
-      // Registrar los listeners
       socket.on('new_incident', handleNewIncident);
       socket.on('incident_deleted', handleIncidentDeleted);
       socket.on('incident_updated', handleIncidentUpdated);
 
-      // Limpieza al desmontar el componente
       return () => {
         console.log("Desconectando socket y limpiando listeners...");
         socket.off('new_incident', handleNewIncident);
@@ -68,6 +70,9 @@ export function IncidentProvider({ children }) {
         socket.off('incident_updated', handleIncidentUpdated);
         socket.disconnect();
       };
+    } else {
+      setLoading(false);
+      setIncidents([]);
     }
   }, [user]);
 

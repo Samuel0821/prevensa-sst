@@ -13,7 +13,7 @@
 
 Para gestionar toda la información de la empresa (usuarios, reportes, estadísticas), utiliza la aplicación web.
 
-*   **Acceso:** Abre tu navegador web (Google Chrome, Firefox, etc.) y ve a la dirección URL que te fue proporcionada.
+*   **Acceso:** Abre tu navegador web (Google Chrome, Firefox, etc.) y ve a la dirección URL: https://prevensa-sst-22953878-fc82c.web.app .
 *   **Inicio de Sesión:** Usa el **email** y la **contraseña** que te fueron asignados.
 
 #### **1.2. Aplicación Móvil (Para Todos los Usuarios)**
@@ -22,6 +22,7 @@ Para reportar incidentes o consultar información desde cualquier lugar, usa la 
 
 1.  **Descarga:**
     *   Recibirás un enlace para descargar el archivo de instalación (`.apk`).
+    *   https://drive.google.com/file/d/1W6yaJesvI1Xl06wiaScU0a1W3Gk01KnL/view?usp=drive_link
     *   Abre este enlace desde tu teléfono Android.
 
 2.  **Instalación:**

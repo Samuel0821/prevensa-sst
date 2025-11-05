@@ -1,223 +1,166 @@
+
 // app-mobile/app/(user)/users.js
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, Button, Alert,
-  ActivityIndicator, RefreshControl
-} from 'react-native';
-import { useFocusEffect } from 'expo-router';
-import api from '../../api/api'; // CORRECCIÓN: Importación por defecto
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { useAuth } from '../../src/context/AuthContext';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 
-// Estado inicial del formulario de usuario
-const initialFormState = { id: null, name: '', email: '', role: 'user', password: '' };
+// Componente para mostrar un campo de información del perfil
+const InfoRow = ({ label, value, icon }) => (
+  <View style={styles.infoRow}>
+    <FontAwesome5 name={icon} size={20} color="#555" style={styles.icon} />
+    <View>
+      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.value}>{value}</Text>
+    </View>
+  </View>
+);
 
-// --- COMPONENTE DEL FORMULARIO DE USUARIO (MODAL) ---
-const UserForm = ({ visible, onSave, onCancel, user, setUser, loading }) => {
-  const isEditing = user && user.id;
+export default function UserProfileScreen() {
+  const { user, logout } = useAuth();
 
-  return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onCancel}>
-      <View style={styles.modalContainer}>
-        <Text style={styles.modalTitle}>{isEditing ? "Editar Usuario" : "Nuevo Usuario"}</Text>
-        
-        <TextInput
-          placeholder="Nombre Completo"
-          style={styles.input}
-          value={user.name}
-          onChangeText={(text) => setUser({ ...user, name: text })}
-          autoCapitalize="words"
-        />
-        <TextInput
-          placeholder="Correo Electrónico"
-          style={styles.input}
-          value={user.email}
-          onChangeText={(text) => setUser({ ...user, email: text })}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        {/* El campo de contraseña solo se muestra para nuevos usuarios */}
-        {!isEditing && (
-          <TextInput
-            placeholder="Contraseña"
-            style={styles.input}
-            value={user.password}
-            onChangeText={(text) => setUser({ ...user, password: text })}
-            secureTextEntry
-          />
-        )}
-
-        {/* Selector de Rol */}
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={user.role}
-            onValueChange={(itemValue) => setUser({ ...user, role: itemValue })}
-          >
-            <Picker.Item label="Usuario" value="user" />
-            <Picker.Item label="Administrador" value="admin" />
-          </Picker>
-        </View>
-
-        <View style={styles.buttonContainer}>
-          <Button title="Guardar" onPress={onSave} disabled={loading} />
-          <Button title="Cancelar" onPress={onCancel} color="#FF3B30" />
-        </View>
-        {loading && <ActivityIndicator size="large" style={{ marginTop: 20 }}/>}
-      </View>
-    </Modal>
-  );
-};
-
-// --- PANTALLA PRINCIPAL DE GESTIÓN DE USUARIOS ---
-export default function UsersScreen() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(initialFormState);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Carga la lista de usuarios desde la API
-  const fetchUsers = async () => {
-    try {
-      const response = await api.get('/users');
-      setUsers(response.data);
-    } catch (error) {
-      Alert.alert("Error", "No se pudieron cargar los usuarios.");
-    } finally {
-      setLoading(false);
-      setIsRefreshing(false);
-    }
-  };
-
-  // Hooks para cargar y refrescar datos
-  useFocusEffect(useCallback(() => { setLoading(true); fetchUsers(); }, []));
-  const onRefresh = useCallback(() => { setIsRefreshing(true); fetchUsers(); }, []);
-
-  // Lógica para guardar (crear o actualizar) un usuario
-  const handleSave = async () => {
-    if (!selectedUser.name || !selectedUser.email || (!selectedUser.id && !selectedUser.password)) {
-      Alert.alert("Campos incompletos", "Por favor, rellena todos los campos.");
-      return;
-    }
-    setIsSubmitting(true);
-
-    const isUpdating = !!selectedUser.id;
-    const url = isUpdating ? `/users/${selectedUser.id}` : '/users';
-    const method = isUpdating ? 'put' : 'post';
-
-    try {
-      await api[method](url, selectedUser);
-      Alert.alert("Éxito", `Usuario ${isUpdating ? 'actualizado' : 'creado'} correctamente.`);
-      setModalVisible(false);
-      fetchUsers();
-    } catch (error) {
-      const errorMsg = error.response?.data?.error || `No se pudo ${isUpdating ? 'actualizar' : 'crear'} el usuario.`;
-      Alert.alert("Error", errorMsg);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Lógica para eliminar un usuario
-  const handleDelete = (userId) => {
+  const handleLogout = () => {
     Alert.alert(
-      "Confirmar Eliminación",
-      "¿Estás seguro de que quieres eliminar este usuario? Esta acción es irreversible.",
+      "Cerrar Sesión",
+      "¿Estás seguro de que quieres cerrar tu sesión?",
       [
-        { text: "Cancelar", style: 'cancel' },
+        { text: "Cancelar", style: "cancel" },
         {
-          text: "Eliminar",
+          text: "Sí, Cerrar Sesión",
           style: "destructive",
           onPress: async () => {
-            try {
-              await api.delete(`/users/${userId}`);
-              Alert.alert("Éxito", "Usuario eliminado correctamente.");
-              fetchUsers();
-            } catch (error) {
-              Alert.alert("Error", "No se pudo eliminar el usuario.");
-            }
+            await logout();
           },
         },
       ]
     );
   };
 
-  // Abre el modal, ya sea para un nuevo usuario o para editar uno existente
-  const openModal = (user = initialFormState) => {
-    setSelectedUser(user);
-    setModalVisible(true);
-  };
-
-  // Indicador de carga inicial
-  if (loading && !isRefreshing) {
-    return <View style={styles.centered}><ActivityIndicator size="large" /></View>;
+  if (!user) {
+    return (
+      <View style={styles.centered}>
+        <Text>No se pudo cargar la información del usuario.</Text>
+      </View>
+    );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Gestión de Usuarios</Text>
-      <FlatList
-        data={users}
-        keyExtractor={(item) => item.id.toString()}
-        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh}/>}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>{item.name}</Text>
-              <Text style={styles.cardSubtitle}>{item.email}</Text>
-              <View style={[styles.badge, item.role === 'admin' ? styles.badgeAdmin : styles.badgeUser]}>
-                <Text style={styles.badgeText}>{item.role}</Text>
-              </View>
-            </View>
-            <View style={styles.cardActions}>
-              <TouchableOpacity onPress={() => openModal(item)} style={styles.actionButton}>
-                <FontAwesome5 name="edit" size={18} color="#007AFF" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.actionButton}>
-                <FontAwesome5 name="trash" size={18} color="#FF3B30" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-        ListEmptyComponent={<Text style={styles.emptyText}>No hay usuarios registrados.</Text>}
-      />
-      <TouchableOpacity style={styles.fab} onPress={() => openModal()}>
-        <FontAwesome5 name="plus" size={20} color="white" />
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{user.name ? user.name[0].toUpperCase() : 'U'}</Text>
+        </View>
+        <Text style={styles.name}>{user.name || 'Usuario'}</Text>
+        <Text style={styles.company}>{user.company_name || 'Empresa sin asignar'}</Text>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Información de la Cuenta</Text>
+        <InfoRow label="Correo Electrónico" value={user.email} icon="envelope" />
+        <InfoRow label="Rol de Usuario" value={user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'N/A'} icon="user-tag" />
+        <InfoRow label="Empresa" value={user.company_name || 'Sin asignar'} icon="building" />
+      </View>
+
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <FontAwesome5 name="sign-out-alt" size={20} color="#D32F2F" />
+        <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
       </TouchableOpacity>
-      <UserForm
-        visible={modalVisible}
-        onSave={handleSave}
-        onCancel={() => { setModalVisible(false); setSelectedUser(initialFormState); }}
-        user={selectedUser}
-        setUser={setSelectedUser}
-        loading={isSubmitting}
-      />
-    </View>
+    </ScrollView>
   );
 }
 
-// --- ESTILOS (MEJORADOS Y UNIFICADOS) ---
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F0F2F5' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { fontSize: 26, fontWeight: 'bold', padding: 20, backgroundColor: 'white' },
-  card: { backgroundColor: 'white', marginVertical: 8, marginHorizontal: 16, borderRadius: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', elevation: 3 },
-  cardContent: { padding: 16, flex: 1 },
-  cardTitle: { fontSize: 18, fontWeight: 'bold' },
-  cardSubtitle: { fontSize: 14, color: 'gray', marginTop: 2, marginBottom: 8 },
-  badge: { borderRadius: 12, paddingVertical: 4, paddingHorizontal: 10, alignSelf: 'flex-start' },
-  badgeAdmin: { backgroundColor: '#007AFF' },
-  badgeUser: { backgroundColor: '#34C759' },
-  badgeText: { color: 'white', fontWeight: 'bold', fontSize: 12, textTransform: 'capitalize' },
-  cardActions: { flexDirection: 'row', padding: 8 },
-  actionButton: { padding: 8 },
-  fab: { position: 'absolute', right: 20, bottom: 20, backgroundColor: '#007AFF', width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', elevation: 8 },
-  modalContainer: { flex: 1, justifyContent: 'center', padding: 30, backgroundColor: '#F9F9F9' },
-  modalTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#ddd', padding: 12, borderRadius: 8, marginBottom: 15, backgroundColor: 'white' },
-  pickerContainer: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, marginBottom: 15, backgroundColor: 'white' },
-  buttonContainer: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 },
-  emptyText: { textAlign: 'center', marginTop: 50, color: 'gray', fontSize: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: '#F0F2F5',
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 30,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+    elevation: 4,
+  },
+  avatarText: {
+    color: '#FFFFFF',
+    fontSize: 40,
+    fontWeight: 'bold',
+  },
+  name: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+  },
+  company: {
+    fontSize: 16,
+    color: '#6C6C6E',
+    marginTop: 4,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    margin: 15,
+    borderRadius: 10,
+    padding: 20,
+    elevation: 2,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    paddingBottom: 10,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  icon: {
+    width: 40,
+    textAlign: 'center',
+    marginRight: 15,
+  },
+  label: {
+    color: '#6C6C6E',
+    fontSize: 14,
+    marginBottom: 2,
+  },
+  value: {
+    color: '#1C1C1E',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 15,
+    marginTop: 10,
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 2,
+  },
+  logoutButtonText: {
+    color: '#D32F2F',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 15,
+  },
 });
